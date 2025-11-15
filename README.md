@@ -5,5 +5,5 @@
 2. `docker-compose up -d`
 3. `mvn spring-boot:run`
 
-## Environment Variables
-- `DB_PASSWORD` - database password
+## TODO
+- Remove database password from `application.yaml`
