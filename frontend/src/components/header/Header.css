@@ -12,14 +12,14 @@
 .header-logo-div {
     display: flex;
     align-items: center;
-    padding: 10px;
+    padding: 20px;
 }
 
 .header-navigation-div {
     display: flex;
     align-items: center;
-    padding: 10px;
-    gap: 15px;
+    padding: 20px;
+    gap: 20px;
 }
 
 .header-navigation-div a {
