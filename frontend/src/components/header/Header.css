@@ -1,10 +1,12 @@
 .header-container {
     background-color: #47698b;
     width: 100vw;
-    padding: 20px;
+    height: 10vh;
+    max-height: 10vh;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    user-select: none;
 }
 
 .header-logo-div {

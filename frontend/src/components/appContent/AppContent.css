@@ -1,0 +1,9 @@
+.app-content-container {
+    background-color: #004181;
+    height: 90vh;
+    max-height: 90vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
