@@ -1,11 +1,13 @@
 import './App.css'
+import Header from './components/header/Header'
 
 function App() {
-  return (
-    <>
-      <p>Hello Vite + React!</p>
-    </>
-  )
+    return (
+        <>
+            <Header />
+            <p>Hello Vite + React!</p>
+        </>
+    )
 }
 
 export default App

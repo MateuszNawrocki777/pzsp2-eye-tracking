@@ -1,0 +1,21 @@
+.header-container {
+    background-color: #47698b;
+    width: 100vw;
+    padding: 20px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.header-logo-div {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+}
+
+.header-navigation-div {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    gap: 15px;
+}
