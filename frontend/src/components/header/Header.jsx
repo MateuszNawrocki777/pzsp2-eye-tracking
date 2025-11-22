@@ -24,10 +24,10 @@ function Navigation() {
             <NavLink to="/" className={"header-navigation-button"}>Home</NavLink>
             <NavLink to="/about" className={"header-navigation-button"}>About</NavLink>
             <NavLink to="/profile" className={"header-navigation-button"}>Profile</NavLink>
-            {isLoggedIn ? ( 
-                <button onClick={logout} className={"header-navigation-button"}>Logout</button> //TODO: These buttons arent styled properly
+            {isLoggedIn ? (
+                <a onClick={logout} className={"header-navigation-button"}>Logout</a> //TODO: These buttons arent styled properly
             ) : (
-                <button onClick={login} className={"header-navigation-login-button"}>Login</button>
+                <a onClick={login} className={"header-navigation-login-button"}>Login</a>
             )}
         </div>
     )
