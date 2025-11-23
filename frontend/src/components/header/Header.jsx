@@ -23,7 +23,8 @@ function Navigation() {
         <div className='header-navigation-div'>
             <NavLink to="/" className={"header-navigation-button"}>Home</NavLink>
             <NavLink to="/about" className={"header-navigation-button"}>About</NavLink>
-            <NavLink to="/profile" className={"header-navigation-button"}>Profile</NavLink>
+            <NavLink to="/newTest" className={"header-navigation-button"}>New Test</NavLink>
+            {isLoggedIn && <NavLink to="/myTests" className={"header-navigation-button"}>My Tests</NavLink>}
             {isLoggedIn ? (
                 <a onClick={logout} className={"header-navigation-button"}>Logout</a> //TODO: Implement logging out
             ) : (

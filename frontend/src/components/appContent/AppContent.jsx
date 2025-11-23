@@ -17,7 +17,8 @@ export default function AppContent() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/about" element={<div>About page</div>} />
-                <Route path="/profile" element={<div>Profile page</div>} />
+                <Route path="/newTest" element={<div>New Test page</div>} />
+                <Route path="/myTests" element={<div>My Tests page</div>} />
                 <Route path="*" element={<PageNotFound />} />
             </Routes>
         </div>
