@@ -17,7 +17,7 @@ export default function Header() {
 
 
 function Navigation() {
-    const { isLoggedIn, login, logout } = useAuth();
+    const { isLoggedIn, logout } = useAuth();
 
     return (
         <div className='header-navigation-div'>
@@ -25,9 +25,9 @@ function Navigation() {
             <NavLink to="/about" className={"header-navigation-button"}>About</NavLink>
             <NavLink to="/profile" className={"header-navigation-button"}>Profile</NavLink>
             {isLoggedIn ? (
-                <a onClick={logout} className={"header-navigation-button"}>Logout</a> //TODO: These buttons arent styled properly
+                <a onClick={logout} className={"header-navigation-button"}>Logout</a> //TODO: Implement logging out
             ) : (
-                <a onClick={login} className={"header-navigation-login-button"}>Login</a>
+                <NavLink to="/login" className={"header-navigation-login-button"}>Login</NavLink>
             )}
         </div>
     )
