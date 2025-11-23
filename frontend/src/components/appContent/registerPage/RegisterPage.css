@@ -1,4 +1,4 @@
-.login-page-container {
+.register-page-container {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -9,7 +9,7 @@
     padding-top: 3%;
 }
 
-.login-page-content {
+.register-page-content {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -17,11 +17,11 @@
     gap: 15px;
 }
 
-.login-page-login-button {
+.register-page-register-button {
     background-color: #5F85DB;
 }
 
-.login-page-error {
+.register-page-error {
     color: #ff4a4a;
     margin: 0;
     font-size: 0.8em;
