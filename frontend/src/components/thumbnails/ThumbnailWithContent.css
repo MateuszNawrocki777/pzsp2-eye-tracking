@@ -19,7 +19,7 @@
 .thumbnail-with-content-content {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     justify-content: stretch;
     gap: 8px;
 }
