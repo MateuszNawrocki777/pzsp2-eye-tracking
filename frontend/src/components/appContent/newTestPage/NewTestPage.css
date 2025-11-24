@@ -36,3 +36,12 @@
 .new-test-add-image-thumbnail {
     cursor: pointer;
 }
+
+.new-test-add-image-text {
+    font-weight: normal;
+    cursor: auto;
+}
+
+.new-test-add-image-text:hover {
+    border: 1px solid transparent;
+}
