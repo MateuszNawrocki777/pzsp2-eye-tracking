@@ -1,0 +1,25 @@
+.thumbnail-with-content-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: 8px;
+    padding: 10px;
+    width: 150px;
+    border: 3px solid #353941;
+    gap: 8px;
+}
+
+.thumbnail-with-content-image {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.thumbnail-with-content-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: stretch;
+    gap: 8px;
+}
