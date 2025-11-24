@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 
 import ThumbnailWithContent from "../../thumbnails/ThumbnailWithContent";
 import CreateThumbnail from "../../thumbnails/CreateThumbnail";
+import ImageThumbnail from "../../thumbnails/ImageThumbnail";
 
 import "./NewTestPage.css";
 
@@ -25,9 +26,7 @@ export default function NewTestPage() {
         <div className="new-test-container">
             <div className="new-test-content-container">
                 <h1>New Test</h1>
-                <div className="new-test-images-container">
-                    <AddImageCard />
-                </div>
+                <ImageCards />
             </div>
             <input
                 type="file"
@@ -54,6 +53,26 @@ export default function NewTestPage() {
                 <button onClick={handleAddImageClick}>Add image</button>
                 <button className="new-test-add-image-text">.png .jpg .pdf</button>
             </ThumbnailWithContent>
+        );
+    }
+
+    function ImageCard({ image}) {
+        return (
+            <ThumbnailWithContent image={<ImageThumbnail image={image} />}>
+                <button>Preview</button> {/* TODO: Make these buttons functional */}
+                <button className="dangerous-button">Remove</button>
+            </ThumbnailWithContent>
+        );
+    }
+
+    function ImageCards() {
+        return (
+            <div className="new-test-images-container">
+                <AddImageCard />
+                {images.map((image, index) => (
+                    <ImageCard key={index} image={image} />
+                ))}
+            </div>
         );
     }
 }

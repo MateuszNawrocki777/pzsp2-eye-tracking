@@ -39,6 +39,7 @@ input[type="email"] {
   font-family: inherit;
   background-color: #353941;
   transition: border-color 0.25s;
+  color: #fff;
 }
 button:hover,
 input[type="text"]:hover,
@@ -49,4 +50,8 @@ input[type="email"]:hover {
 
 button {
   cursor: pointer;
+}
+
+.dangerous-button:hover {
+  border-color: #ff4a4a;
 }
