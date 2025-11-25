@@ -1,0 +1,11 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "echo \"No frontend tests\"",
+    "build": "echo \"No frontend build\""
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
