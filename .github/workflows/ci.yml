@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "frontend/**"
+      - "backend/**"
+
+  workflow_dispatch:
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Hello from Backend"
