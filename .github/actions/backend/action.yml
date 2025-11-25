@@ -1,0 +1,6 @@
+name: "Build Backend"
+description: "Tests and builds the backend"
+runs:
+  using: "composite"
+  steps:
+    - run: echo "Hello from Backend\n"

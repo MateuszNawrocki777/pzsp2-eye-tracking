@@ -1,0 +1,8 @@
+name: "Build Frontend"
+description: "Installs, tests and builds the frontend"
+runs:
+  using: "composite"
+  steps:
+    - run: npm ci
+    # - run: npm test
+    - run: npm run dev
