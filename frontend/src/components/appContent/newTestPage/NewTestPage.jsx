@@ -135,7 +135,7 @@ export default function NewTestPage() {
                         id="imageTime" 
                         name="imageTime"
                         ref={timeInputRef} />
-                    <label htmlFor="imageTime"> Time per image (in seconds) </label>
+                    <label htmlFor="imageTime"> seconds per image </label>
                 </div>
                 <div className="new-test-control-checkbox">
                     <input 
