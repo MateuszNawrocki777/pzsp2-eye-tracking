@@ -17,6 +17,7 @@
     background-color: #353941;
     border-radius: 8px;
     padding: 20px;
+    overflow-y: auto;
 }
 
 .new-test-content-container h1 {
