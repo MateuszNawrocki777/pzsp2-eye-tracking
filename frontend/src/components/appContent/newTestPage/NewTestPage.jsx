@@ -1,5 +1,7 @@
 import { useState, useRef } from "react";
 
+import { useNewTest } from "../../../hooks/newTestContext";
+
 import ThumbnailWithContent from "../../thumbnails/ThumbnailWithContent";
 import CreateThumbnail from "../../thumbnails/CreateThumbnail";
 import ImageThumbnailWithButtons from "../../thumbnails/ImageThumbnailWithButtons";
@@ -8,7 +10,7 @@ import "./NewTestPage.css";
 
 
 export default function NewTestPage() {
-    const [images, setImages] = useState([]); {/* TODO: Lift this state up into a context, so the progress is saved, when exiting this tab */}
+    const { images, setImages } = useNewTest();
     
     const fileInputRef = useRef(null);
     const gazeTrackingInputRef = useRef(null);
