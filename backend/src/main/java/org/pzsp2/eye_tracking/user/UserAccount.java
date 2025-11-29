@@ -11,6 +11,8 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 @Entity
 @Table(name = "app_user")
 public class UserAccount {

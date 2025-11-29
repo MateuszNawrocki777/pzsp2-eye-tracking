@@ -39,12 +39,12 @@ class AuthServiceTest {
 
     @Test
     void registerShouldPersistNewUser() {
-        RegisterRequest request = new RegisterRequest("test@example.com", "StrongPass1", UserRole.RESEARCHER);
+        RegisterRequest request = new RegisterRequest("test@example.com", "StrongPass1", UserRole.USER);
         given(userAccountRepository.existsByEmailIgnoreCase("test@example.com")).willReturn(false);
         given(passwordService.hashPassword("StrongPass1")).willReturn("hash");
 
         UserAccount persisted = new UserAccount(UUID.randomUUID(), "test@example.com", "hash",
-                UserRole.RESEARCHER);
+                UserRole.USER);
         Instant createdAt = Instant.now();
         ReflectionTestUtils.setField(persisted, "createdAt", createdAt);
         given(userAccountRepository.save(any(UserAccount.class))).willReturn(persisted);
@@ -53,7 +53,7 @@ class AuthServiceTest {
 
         assertEquals(persisted.getUserId(), response.userId());
         assertEquals("test@example.com", response.email());
-        assertEquals(UserRole.RESEARCHER, response.role());
+        assertEquals(UserRole.USER, response.role());
         assertEquals(createdAt, response.createdAt());
 
         ArgumentCaptor<UserAccount> captor = ArgumentCaptor.forClass(UserAccount.class);
@@ -63,7 +63,7 @@ class AuthServiceTest {
 
     @Test
     void registerShouldFailForDuplicateEmail() {
-        RegisterRequest request = new RegisterRequest("test@example.com", "StrongPass1", UserRole.RESEARCHER);
+        RegisterRequest request = new RegisterRequest("test@example.com", "StrongPass1", UserRole.USER);
         given(userAccountRepository.existsByEmailIgnoreCase("test@example.com")).willReturn(true);
 
         assertThrows(ResponseStatusException.class, () -> authService.register(request));

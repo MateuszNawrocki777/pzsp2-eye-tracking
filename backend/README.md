@@ -15,7 +15,7 @@
 	{
 		"email": "researcher@example.com",
 		"password": "StrongPass123",
-		"role": "RESEARCHER"
+		"role": "USER"
 	}
 	```
 - **Response:** returns the generated `userId`, normalized `email`, assigned `role`, and `createdAt` timestamp.
@@ -31,6 +31,12 @@
 	}
 	```
 - **Response:** returns the `userId`, `role`, `loggedInAt` timestamp, and a short success message.
+
+## API documentation
+
+- Install dependencies with `./mvnw dependency:resolve` (first run will do this automatically).
+- Start the backend (`./mvnw spring-boot:run`).
+- Open Swagger UI at [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) to explore and try all endpoints. The generated OpenAPI JSON is also available at `/v3/api-docs` for tooling integration.
 
 ## Testing
 
