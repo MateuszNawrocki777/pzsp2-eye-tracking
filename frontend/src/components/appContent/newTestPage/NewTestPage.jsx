@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 import ThumbnailWithContent from "../../thumbnails/ThumbnailWithContent";
 import CreateThumbnail from "../../thumbnails/CreateThumbnail";
@@ -12,6 +13,7 @@ export default function NewTestPage() {
     /* TODO: Lift this state up into a context, so the progress is saved, when exiting this tab */
   }
   const fileInputRef = useRef(null);
+  const navigate = useNavigate();
 
   function handleAddImageClick() {
     fileInputRef.current.click();
@@ -26,7 +28,7 @@ export default function NewTestPage() {
 
   function handleRun() {
     console.log("RUN clicked!");
-    window.open("/run-test", "_blank");
+    navigate("/runTest");
   }
 
   return (
