@@ -9,7 +9,12 @@ import "./NewTestPage.css";
 
 export default function NewTestPage() {
     const [images, setImages] = useState([]); {/* TODO: Lift this state up into a context, so the progress is saved, when exiting this tab */}
+    
     const fileInputRef = useRef(null);
+    const gazeTrackingInputRef = useRef(null);
+    const displayTimeInputRef = useRef(null);
+    const timeInputRef = useRef(null);
+    const randomizeImagesInputRef = useRef(null);
 
     function handleAddImageClick() {
         fileInputRef.current.click();
@@ -29,8 +34,16 @@ export default function NewTestPage() {
     return (
         <div className="new-test-container">
             <div className="new-test-content-container">
-                <h1>New Test</h1>
-                <ImageCards />
+                <div>
+                    <h1>New Test</h1>
+                    <ImageCards />
+                </div>
+                <div className="new-test-control-container">
+                    <Settings />
+                    <div className="new-test-control-panel">
+                        <h2>Finish Test</h2>
+                    </div>
+                </div>
             </div>
             <input
                 type="file"
@@ -62,11 +75,11 @@ export default function NewTestPage() {
 
         const buttons = hovered && (
             <>
-                <button className="new-test-preview-image-button">
+                {/* <button className="new-test-preview-image-button">
                     <span className="material-symbols-outlined">
                     visibility
                     </span>
-                </button> {/* TODO: Make these buttons functional */}
+                </button> TODO: Make this button functional */}
                 <button className="new-test-remove-image-button"
                     onClick={() => handleRemoveImage(image)}>
                     <span className="material-symbols-outlined">
@@ -91,6 +104,47 @@ export default function NewTestPage() {
                 {images.map((image, index) => (
                     <ImageCard key={index} image={image} />
                 ))}
+            </div>
+        );
+    }
+
+    function Settings() {
+        return (
+            <div className="new-test-control-panel">
+                <h2>Settings</h2>
+                <div className="new-test-control-checkbox">
+                    <input 
+                        type="checkbox" 
+                        id="displayGaze" 
+                        name="displayGaze"
+                        ref={gazeTrackingInputRef} />
+                    <label htmlFor="displayGaze"> Display Gaze Tracking </label>
+                </div>
+                <div className="new-test-control-checkbox">
+                    <input 
+                        type="checkbox" 
+                        id="displayTimeLeft" 
+                        name="displayTimeLeft"
+                        ref={displayTimeInputRef} />
+                    <label htmlFor="displayTimeLeft"> Display Time Left </label>
+                </div>
+                <div className="new-test-control-checkbox">
+                    <input 
+                        className="new-test-time-input"
+                        type="number" 
+                        id="imageTime" 
+                        name="imageTime"
+                        ref={timeInputRef} />
+                    <label htmlFor="imageTime"> Time per image (in seconds) </label>
+                </div>
+                <div className="new-test-control-checkbox">
+                    <input 
+                        type="checkbox" 
+                        id="randomizeImages" 
+                        name="randomizeImages"
+                        ref={randomizeImagesInputRef} />
+                    <label htmlFor="randomizeImages"> Randomize Image Order </label>
+                </div>
             </div>
         );
     }

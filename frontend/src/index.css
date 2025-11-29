@@ -30,7 +30,8 @@ h1 {
 button,
 input[type="text"],
 input[type="password"],
-input[type="email"] {
+input[type="email"],
+input[type="number"] {
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
@@ -44,7 +45,8 @@ input[type="email"] {
 button:hover,
 input[type="text"]:hover,
 input[type="password"]:hover,
-input[type="email"]:hover {
+input[type="email"]:hover,
+input[type="number"]:hover {
   border-color: #90B8F8;
 }
 
@@ -54,4 +56,21 @@ button {
 
 .dangerous-button:hover {
   border-color: #ff4a4a;
+}
+
+input[type="checkbox"] {
+  width: 1.5rem;
+  height: 1.5rem;
+  accent-color: #5F85DB;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+input[type=number] {
+    -moz-appearance:textfield; /* Firefox */
 }
