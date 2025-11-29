@@ -41,10 +41,9 @@ class AuthServiceTest {
     void registerShouldPersistNewUser() {
         RegisterRequest request = new RegisterRequest("test@example.com", "StrongPass1", UserRole.RESEARCHER);
         given(userAccountRepository.existsByEmailIgnoreCase("test@example.com")).willReturn(false);
-        given(passwordService.generateSalt()).willReturn("salt");
-        given(passwordService.hashPassword("StrongPass1", "salt")).willReturn("hash");
+        given(passwordService.hashPassword("StrongPass1")).willReturn("hash");
 
-        UserAccount persisted = new UserAccount(UUID.randomUUID(), "test@example.com", "hash", "salt",
+        UserAccount persisted = new UserAccount(UUID.randomUUID(), "test@example.com", "hash",
                 UserRole.RESEARCHER);
         Instant createdAt = Instant.now();
         ReflectionTestUtils.setField(persisted, "createdAt", createdAt);
@@ -60,7 +59,6 @@ class AuthServiceTest {
         ArgumentCaptor<UserAccount> captor = ArgumentCaptor.forClass(UserAccount.class);
         verify(userAccountRepository).save(captor.capture());
         assertEquals("hash", captor.getValue().getPasswordHash());
-        assertEquals("salt", captor.getValue().getPasswordSalt());
     }
 
     @Test
@@ -74,10 +72,10 @@ class AuthServiceTest {
     @Test
     void loginShouldReturnUserDetailsWhenPasswordMatches() {
         LoginRequest request = new LoginRequest("test@example.com", "StrongPass1");
-        UserAccount account = new UserAccount(UUID.randomUUID(), "test@example.com", "storedHash", "storedSalt",
+        UserAccount account = new UserAccount(UUID.randomUUID(), "test@example.com", "storedHash",
                 UserRole.ADMIN);
         given(userAccountRepository.findByEmailIgnoreCase("test@example.com")).willReturn(Optional.of(account));
-        given(passwordService.hashPassword("StrongPass1", "storedSalt")).willReturn("storedHash");
+        given(passwordService.matches("StrongPass1", "storedHash")).willReturn(true);
 
         var response = authService.login(request);
 
@@ -90,10 +88,10 @@ class AuthServiceTest {
     @Test
     void loginShouldFailForInvalidPassword() {
         LoginRequest request = new LoginRequest("test@example.com", "WrongPass");
-        UserAccount account = new UserAccount(UUID.randomUUID(), "test@example.com", "storedHash", "storedSalt",
+        UserAccount account = new UserAccount(UUID.randomUUID(), "test@example.com", "storedHash",
                 UserRole.ADMIN);
         given(userAccountRepository.findByEmailIgnoreCase("test@example.com")).willReturn(Optional.of(account));
-        given(passwordService.hashPassword("WrongPass", "storedSalt")).willReturn("differentHash");
+        given(passwordService.matches("WrongPass", "storedHash")).willReturn(false);
 
         assertThrows(ResponseStatusException.class, () -> authService.login(request));
     }

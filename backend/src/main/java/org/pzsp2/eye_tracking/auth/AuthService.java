@@ -35,14 +35,12 @@ public class AuthService {
         }
 
         UUID userId = UUID.randomUUID();
-        String salt = passwordService.generateSalt();
-        String hash = passwordService.hashPassword(request.password(), salt);
+        String hash = passwordService.hashPassword(request.password());
 
         UserAccount userAccount = new UserAccount(
                 userId,
                 request.email().toLowerCase(),
                 hash,
-                salt,
                 request.role());
 
         UserAccount saved = userAccountRepository.save(userAccount);
@@ -54,8 +52,7 @@ public class AuthService {
         UserAccount account = userAccountRepository.findByEmailIgnoreCase(request.email())
                 .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED, "Invalid email or password"));
 
-        String computedHash = passwordService.hashPassword(request.password(), account.getPasswordSalt());
-        if (!computedHash.equals(account.getPasswordHash())) {
+        if (!passwordService.matches(request.password(), account.getPasswordHash())) {
             throw new ResponseStatusException(UNAUTHORIZED, "Invalid email or password");
         }
 
