@@ -71,5 +71,6 @@ input::-webkit-inner-spin-button {
 }
 
 input[type=number] {
+    appearance: initial;
     -moz-appearance:textfield; /* Firefox */
 }
