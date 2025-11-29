@@ -30,4 +30,10 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
-      - run: echo "Hello from Backend"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Run backend tests
+        run: ./mvnw -B test
