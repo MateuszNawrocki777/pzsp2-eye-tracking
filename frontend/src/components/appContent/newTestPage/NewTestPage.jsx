@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 
 import ThumbnailWithContent from "../../thumbnails/ThumbnailWithContent";
 import CreateThumbnail from "../../thumbnails/CreateThumbnail";
-import ImageThumbnail from "../../thumbnails/ImageThumbnail";
+import ImageThumbnailWithButtons from "../../thumbnails/ImageThumbnailWithButtons";
 
 import "./NewTestPage.css";
 
@@ -49,19 +49,33 @@ export default function NewTestPage() {
 
     function AddImageCard() {
         return (
-            <ThumbnailWithContent image={<AddImageThumbnail />}>
-                <button onClick={handleAddImageClick}>Add image</button>
-                <button className="new-test-add-image-text">.png .jpg .pdf</button>
-            </ThumbnailWithContent>
+            <ThumbnailWithContent image={<AddImageThumbnail />} />
         );
     }
 
-    function ImageCard({ image}) {
+    function ImageCard({ image }) {
+        const [hovered, setHovered] = useState(false);
+
+        const buttons = hovered && (
+            <>
+                <button className="new-test-preview-image-button">
+                    <span className="material-symbols-outlined">
+                    visibility
+                    </span>
+                </button> {/* TODO: Make these buttons functional */}
+                <button className="new-test-remove-image-button">
+                    <span className="material-symbols-outlined">
+                    close
+                    </span>
+                </button>
+            </>
+        );
+
         return (
-            <ThumbnailWithContent image={<ImageThumbnail image={image} />}>
-                <button>Preview</button> {/* TODO: Make these buttons functional */}
-                <button className="dangerous-button">Remove</button>
-            </ThumbnailWithContent>
+            <ThumbnailWithContent 
+                image={<ImageThumbnailWithButtons image={image} buttons={buttons}/>}
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)} />
         );
     }
 

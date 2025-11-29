@@ -45,3 +45,17 @@
 .new-test-add-image-text:hover {
     border: 1px solid transparent;
 }
+
+.new-test-preview-image-button {
+    top: 5px;
+    left: 5px;
+}
+
+.new-test-remove-image-button {
+    top: 5px;
+    right: 5px;
+}
+
+.new-test-remove-image-button:hover {
+    border-color: #ff4a4a;
+}
