@@ -22,6 +22,10 @@ export default function NewTestPage() {
         event.target.value = null; 
     }
 
+    function handleRemoveImage(image) {
+        setImages((prevImages) => prevImages.filter((img) => img !== image));
+    }
+
     return (
         <div className="new-test-container">
             <div className="new-test-content-container">
@@ -63,7 +67,8 @@ export default function NewTestPage() {
                     visibility
                     </span>
                 </button> {/* TODO: Make these buttons functional */}
-                <button className="new-test-remove-image-button">
+                <button className="new-test-remove-image-button"
+                    onClick={() => handleRemoveImage(image)}>
                     <span className="material-symbols-outlined">
                     close
                     </span>
