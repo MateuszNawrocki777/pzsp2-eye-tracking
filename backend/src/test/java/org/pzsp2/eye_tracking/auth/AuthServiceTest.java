@@ -9,6 +9,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.pzsp2.eye_tracking.auth.crypto.PasswordService;
 import org.pzsp2.eye_tracking.auth.dto.LoginRequest;
 import org.pzsp2.eye_tracking.auth.dto.RegisterRequest;
+import org.pzsp2.eye_tracking.auth.jwt.JwtService;
+import org.pzsp2.eye_tracking.auth.jwt.JwtToken;
 import org.pzsp2.eye_tracking.user.UserAccount;
 import org.pzsp2.eye_tracking.user.UserAccountRepository;
 import org.pzsp2.eye_tracking.user.UserRole;
@@ -34,6 +36,9 @@ class AuthServiceTest {
     @Mock
     private PasswordService passwordService;
 
+    @Mock
+    private JwtService jwtService;
+
     @InjectMocks
     private AuthService authService;
 
@@ -48,6 +53,8 @@ class AuthServiceTest {
         Instant createdAt = Instant.now();
         ReflectionTestUtils.setField(persisted, "createdAt", createdAt);
         given(userAccountRepository.save(any(UserAccount.class))).willReturn(persisted);
+        Instant expiresAt = createdAt.plusSeconds(3600);
+        given(jwtService.generateToken(persisted)).willReturn(new JwtToken("jwt-token", expiresAt));
 
         var response = authService.register(request);
 
@@ -55,6 +62,8 @@ class AuthServiceTest {
         assertEquals("test@example.com", response.email());
         assertEquals(UserRole.USER, response.role());
         assertEquals(createdAt, response.createdAt());
+        assertEquals("jwt-token", response.token());
+        assertEquals(expiresAt, response.expiresAt());
 
         ArgumentCaptor<UserAccount> captor = ArgumentCaptor.forClass(UserAccount.class);
         verify(userAccountRepository).save(captor.capture());
@@ -77,12 +86,15 @@ class AuthServiceTest {
         given(userAccountRepository.findByEmailIgnoreCase("test@example.com")).willReturn(Optional.of(account));
         given(passwordService.matches("StrongPass1", "storedHash")).willReturn(true);
 
+        Instant expiresAt = Instant.now().plusSeconds(3600);
+        given(jwtService.generateToken(account)).willReturn(new JwtToken("jwt-token", expiresAt));
+
         var response = authService.login(request);
 
         assertEquals(account.getUserId(), response.userId());
         assertEquals(UserRole.ADMIN, response.role());
-        assertNotNull(response.loggedInAt());
-        assertEquals("Login successful", response.message());
+        assertEquals("jwt-token", response.token());
+        assertEquals(expiresAt, response.expiresAt());
     }
 
     @Test

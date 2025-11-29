@@ -6,8 +6,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record LoginResponse(
-        UUID userId,
-        UserRole role,
-        Instant loggedInAt,
-        String message) {
+                UUID userId,
+                UserRole role,
+                String token,
+                Instant expiresAt) {
 }

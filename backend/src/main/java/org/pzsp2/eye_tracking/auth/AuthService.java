@@ -5,13 +5,14 @@ import org.pzsp2.eye_tracking.auth.dto.LoginRequest;
 import org.pzsp2.eye_tracking.auth.dto.LoginResponse;
 import org.pzsp2.eye_tracking.auth.dto.RegisterRequest;
 import org.pzsp2.eye_tracking.auth.dto.RegisterResponse;
+import org.pzsp2.eye_tracking.auth.jwt.JwtService;
+import org.pzsp2.eye_tracking.auth.jwt.JwtToken;
 import org.pzsp2.eye_tracking.user.UserAccount;
 import org.pzsp2.eye_tracking.user.UserAccountRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.Instant;
 import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.CONFLICT;
@@ -22,10 +23,14 @@ public class AuthService {
 
     private final UserAccountRepository userAccountRepository;
     private final PasswordService passwordService;
+    private final JwtService jwtService;
 
-    public AuthService(UserAccountRepository userAccountRepository, PasswordService passwordService) {
+    public AuthService(UserAccountRepository userAccountRepository,
+            PasswordService passwordService,
+            JwtService jwtService) {
         this.userAccountRepository = userAccountRepository;
         this.passwordService = passwordService;
+        this.jwtService = jwtService;
     }
 
     @Transactional
@@ -44,7 +49,15 @@ public class AuthService {
                 request.role());
 
         UserAccount saved = userAccountRepository.save(userAccount);
-        return new RegisterResponse(saved.getUserId(), saved.getEmail(), saved.getRole(), saved.getCreatedAt());
+        JwtToken token = jwtService.generateToken(saved);
+
+        return new RegisterResponse(
+                saved.getUserId(),
+                saved.getEmail(),
+                saved.getRole(),
+                saved.getCreatedAt(),
+                token.token(),
+                token.expiresAt());
     }
 
     @Transactional(readOnly = true)
@@ -56,6 +69,8 @@ public class AuthService {
             throw new ResponseStatusException(UNAUTHORIZED, "Invalid email or password");
         }
 
-        return new LoginResponse(account.getUserId(), account.getRole(), Instant.now(), "Login successful");
+        JwtToken token = jwtService.generateToken(account);
+
+        return new LoginResponse(account.getUserId(), account.getRole(), token.token(), token.expiresAt());
     }
 }
