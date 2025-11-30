@@ -1,12 +1,22 @@
 import { createContext, useContext, useState } from "react";
 
+import loginCall from "../services/api/loginCall";
+
+
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    let token = null;
 
-    function login() {
-        setIsLoggedIn(true);
+    async function login(email, password) {
+        try {
+            await loginCall(email, password);
+            setIsLoggedIn(true);
+        } catch (error) {
+            console.error("Login failed:", error);
+            throw error;
+        }
     }
 
     function logout() {

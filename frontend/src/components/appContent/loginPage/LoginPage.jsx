@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../../../hooks/authContext.jsx'
 
+import LoadingButton from '../../loadingButton/LoadingButton.jsx'
+
 import './LoginPage.css'
 
 
@@ -15,13 +17,15 @@ export default function LoginPage() {
 
     const [error, setError] = useState("");
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
         const username = usernameRef.current.value;
         const password = passwordRef.current.value;
-        // TODO: Implement login logic
-        console.log("Logging in with", username, password);
-        setError("Example error for testing");
-        login();
+        try {
+            await login(username, password);
+        } catch (error) {
+            setError("Login failed.");
+            return;
+        }
         navigate("/");
     }
 
@@ -31,7 +35,7 @@ export default function LoginPage() {
             <div className='login-page-content'>
                 <input type="text" placeholder="Username" ref={usernameRef} />
                 <input type="password" placeholder="Password" ref={passwordRef} />
-                <button className='login-page-login-button' onClick={handleLogin}>Login</button>
+                <LoadingButton className='login-page-login-button' onClick={handleLogin}>Login</LoadingButton>
                 <button onClick={() => {navigate("/register")}}>Register</button>
                 <p className='login-page-error'>{error}</p>
             </div>
