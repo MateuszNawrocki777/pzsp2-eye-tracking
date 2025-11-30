@@ -19,7 +19,7 @@
 	}
 	```
 - **Response:** returns the generated `userId`, normalized `email`, assigned `role`, `createdAt` timestamp, plus a freshly issued `token` and its `expiresAt` timestamp so the client can treat registration as an automatic login.
-- **Notes:** Only `USER` accounts can be created through this endpoint; firs `ADMIN` account is managed via configuration. `ADMIN` user then can change other user roles to `ADMIN` via endpoint ``
+- **Notes:** Only `USER` accounts can be created through this endpoint; first `ADMIN` account is managed via configuration. `ADMIN` user then can change other user roles to `ADMIN` via endpoint ``
 
 ### Login
 
