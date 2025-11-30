@@ -4,8 +4,8 @@ const NewTestContext = createContext(null);
 
 export function NewTestProvider({ children }) {
     const [images, setImages] = useState([]);
-    const [enableDisplayGazeTracking, setEnableDisplayGazeTracking] = useState(false);
-    const [enableDisplayTimeLeft, setEnableDisplayTimeLeft] = useState(false);
+    const [enableDisplayGazeTracking, setEnableDisplayGazeTracking] = useState(true);
+    const [enableDisplayTimeLeft, setEnableDisplayTimeLeft] = useState(true);
     const [secondsPerImage, setSecondsPerImage] = useState(10);
     const [randomizeImageOrder, setRandomizeImageOrder] = useState(false);
 
