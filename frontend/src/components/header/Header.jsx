@@ -9,7 +9,10 @@ export default function Header() {
 
     return (
         <div className="header-container">
-            <div className='header-logo-div'>Logo placeholder</div>
+            <div className='header-logo-div'>
+                <img src={"./logo.png"} alt="Logo" className='header-logo-image'/>
+                <h2>EyeTracking App</h2>
+            </div>
             <Navigation />
         </div>
     )

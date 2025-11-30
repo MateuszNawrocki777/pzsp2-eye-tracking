@@ -13,6 +13,12 @@
     display: flex;
     align-items: center;
     padding: 20px;
+    color:#5F85DB;
+    gap: 10px;
+}
+
+.header-logo-image {
+    height: 60px;
 }
 
 .header-navigation-div {
