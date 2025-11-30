@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 
+import { useAuth } from "../../../hooks/authContext";
 import { useNewTest } from "../../../hooks/newTestContext";
 
 import ThumbnailWithContent from "../../thumbnails/ThumbnailWithContent";
@@ -16,6 +17,8 @@ export default function NewTestPage() {
     const [showResetPopup, setShowResetPopup] = useState(false);
     
     const fileInputRef = useRef(null);
+
+    const testNameInputRef = useRef(null);
 
     const gazeTrackingInputRef = useRef(null);
     const displayTimeInputRef = useRef(null);
@@ -46,9 +49,7 @@ export default function NewTestPage() {
                 </div>
                 <div className="new-test-control-container">
                     <Settings />
-                    <div className="new-test-control-panel">
-                        <h2>Finish Test</h2>
-                    </div>
+                    <FinishTest />
                 </div>
                 <button className="new-test-reset-button" onClick={() => setShowResetPopup(true)}>
                     Reset
@@ -214,6 +215,38 @@ export default function NewTestPage() {
                     </div>
                 </div>
             </PopupMessage>
+        );
+    }
+
+    function FinishTest() {
+        const { isLoggedIn } = useAuth();
+
+        {/* TODO: Make these buttons work */}
+
+        return (
+            <div className="new-test-control-panel">
+                <h2>Finish Test</h2>
+                <div className="new-test-finish-test-control">
+                    <p>
+                        {!isLoggedIn && 
+                            <>
+                                <span className="material-symbols-outlined">
+                                    info
+                                </span>
+                                If you log in, you can save your test.
+                            </>
+                        }
+                    </p>
+                    <input type="text" placeholder="Enter test name" ref={testNameInputRef} />
+                    <button className={`new-test-save-test-button ${!isLoggedIn ? "disabled-button" : ""}`} 
+                        disabled={!isLoggedIn}>
+                        Save Test
+                    </button>
+                    <button>
+                        Run Test
+                    </button>
+                </div>
+            </div>
         );
     }
 }

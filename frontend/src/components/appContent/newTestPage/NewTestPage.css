@@ -125,3 +125,40 @@
     margin: 0;
     text-align: center;
 }
+
+.new-test-finish-test-control {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: stretch;
+    gap: 10px;
+}
+
+.new-test-finish-test-control p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #bbbbbb;
+    display: flex;
+    align-items: center;
+    min-height: 1.5em;
+}
+
+.new-test-finish-test-control p .material-symbols-outlined {
+    vertical-align: middle;
+    margin-right: 5px;
+    font-size: 1rem;
+}
+
+.new-test-save-test-button {
+    background-color: #5F85DB;
+}
+
+.new-test-save-test-button.disabled-button {
+    background-color: #353941;
+    cursor: not-allowed;
+}
+
+.new-test-save-test-button.disabled-button:hover {
+    border-color: transparent;
+}
