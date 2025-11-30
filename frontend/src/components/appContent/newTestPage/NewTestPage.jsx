@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import ThumbnailWithContent from "../../thumbnails/ThumbnailWithContent";
 import CreateThumbnail from "../../thumbnails/CreateThumbnail";
 import ImageThumbnail from "../../thumbnails/ImageThumbnail";
+import DataReceiver from "./DataReceiver";
 
 import "./NewTestPage.css";
 
@@ -28,7 +29,8 @@ export default function NewTestPage() {
 
   function handleRun() {
     console.log("RUN clicked!");
-    navigate("/runTest");
+    // navigate("/runTest");
+    window.open("/run.html", "_blank"); // otwiera w nowej karcie
   }
 
   return (
@@ -45,6 +47,7 @@ export default function NewTestPage() {
         onChange={handleFileInputChange}
         style={{ display: "none" }}
       />
+      <DataReceiver />
     </div>
   );
 

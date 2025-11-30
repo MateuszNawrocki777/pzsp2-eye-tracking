@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>EyeGestures Test</title>
+    <link rel="stylesheet" href="https://eyegestures.com/eyegestures.css" />
+    <script src="https://www.lactame.com/lib/ml/6.0.0/ml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+    <script src="https://eyegestures.com/eyegestures.js"></script>
+  </head>
+  <body>
+    <video
+      id="video"
+      width="640"
+      height="480"
+      autoplay
+      style="display: block"
+    ></video>
+    <div id="status" style="display: none">Initializing...</div>
+    <div id="error" style="display: none"></div>
+
+    <script>
+      function onPoint(point, calibration) {
+        console.log("Predicted gaze:", point, "Calibration:", calibration);
+
+        // Wysyłamy dane do okna nadrzędnego
+        if (window.opener) {
+          window.opener.postMessage(
+            { point, calibration },
+            window.location.origin
+          );
+        }
+      }
+
+      const gestures = new EyeGestures("video", onPoint);
+      gestures.visible();
+      gestures.start();
+    </script>
+  </body>
+</html>
