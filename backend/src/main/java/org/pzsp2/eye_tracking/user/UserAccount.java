@@ -22,11 +22,8 @@ public class UserAccount {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "password_hash", nullable = false, length = 128)
+    @Column(name = "password_hash", nullable = false, length = 100)
     private String passwordHash;
-
-    @Column(name = "password_salt", nullable = false, length = 64)
-    private String passwordSalt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 32)
@@ -39,11 +36,10 @@ public class UserAccount {
         // for JPA
     }
 
-    public UserAccount(UUID userId, String email, String passwordHash, String passwordSalt, UserRole role) {
+    public UserAccount(UUID userId, String email, String passwordHash, UserRole role) {
         this.userId = userId;
         this.email = email;
         this.passwordHash = passwordHash;
-        this.passwordSalt = passwordSalt;
         this.role = role;
     }
 
@@ -64,15 +60,15 @@ public class UserAccount {
         return passwordHash;
     }
 
-    public String getPasswordSalt() {
-        return passwordSalt;
-    }
-
     public UserRole getRole() {
         return role;
     }
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public void updatePasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 }

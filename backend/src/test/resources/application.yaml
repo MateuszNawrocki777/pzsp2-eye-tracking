@@ -16,3 +16,14 @@ spring:
 logging:
   level:
     org.springframework: WARN
+
+app:
+  security:
+    jwt:
+      # 64 characters (512 bits) default to satisfy HS512 requirements
+      secret: test-change-me-test-change-me-test-change-me-test-change-me-test-change-me-test-change-me
+      issuer: eye-tracking-api
+      expiration-minutes: 60
+    admin:
+      email: test-admin@eye-tracking.local
+      password: TestAdminPassword123!

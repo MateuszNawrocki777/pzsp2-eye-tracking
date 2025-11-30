@@ -13,3 +13,14 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+
+app:
+  security:
+    jwt:
+      # 64 characters (512 bits) default to satisfy HS512 requirements
+      secret: ${JWT_SECRET:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      issuer: eye-tracking-api
+      expiration-minutes: 60
+    admin:
+      email: ${APP_ADMIN_EMAIL:admin@eye-tracking.local}
+      password: ${APP_ADMIN_PASSWORD:ChangeMeAdmin123!}
