@@ -111,6 +111,27 @@ export default function NewTestPage() {
     }
 
     function Settings() {
+        const { enableDisplayGazeTracking, setEnableDisplayGazeTracking } = useNewTest();
+        const { enableDisplayTimeLeft, setEnableDisplayTimeLeft } = useNewTest();
+        const { secondsPerImage, setSecondsPerImage } = useNewTest();
+        const { randomizeImageOrder, setRandomizeImageOrder } = useNewTest();
+
+        function handleGazeTrackingChange() {
+            setEnableDisplayGazeTracking(gazeTrackingInputRef.current.checked);
+        }
+
+        function handleDisplayTimeLeftChange() {
+            setEnableDisplayTimeLeft(displayTimeInputRef.current.checked);
+        }
+
+        function handleSecondsPerImageChange() {
+            setSecondsPerImage(Number(timeInputRef.current.value));
+        }
+
+        function handleRandomizeImageOrderChange() {
+            setRandomizeImageOrder(randomizeImagesInputRef.current.checked);
+        }
+
         return (
             <div className="new-test-control-panel">
                 <h2>Settings</h2>
@@ -119,7 +140,9 @@ export default function NewTestPage() {
                         type="checkbox" 
                         id="displayGaze" 
                         name="displayGaze"
-                        ref={gazeTrackingInputRef} />
+                        ref={gazeTrackingInputRef}
+                        onChange={handleGazeTrackingChange}
+                        checked={enableDisplayGazeTracking} />
                     <label htmlFor="displayGaze"> Display Gaze Tracking </label>
                 </div>
                 <div className="new-test-control-checkbox">
@@ -127,7 +150,9 @@ export default function NewTestPage() {
                         type="checkbox" 
                         id="displayTimeLeft" 
                         name="displayTimeLeft"
-                        ref={displayTimeInputRef} />
+                        ref={displayTimeInputRef}
+                        onChange={handleDisplayTimeLeftChange}
+                        checked={enableDisplayTimeLeft} />
                     <label htmlFor="displayTimeLeft"> Display Time Left </label>
                 </div>
                 <div className="new-test-control-checkbox">
@@ -136,7 +161,9 @@ export default function NewTestPage() {
                         type="number" 
                         id="imageTime" 
                         name="imageTime"
-                        ref={timeInputRef} />
+                        ref={timeInputRef}
+                        onBlur={handleSecondsPerImageChange}
+                        defaultValue={secondsPerImage} />
                     <label htmlFor="imageTime"> seconds per image </label>
                 </div>
                 <div className="new-test-control-checkbox">
@@ -144,7 +171,9 @@ export default function NewTestPage() {
                         type="checkbox" 
                         id="randomizeImages" 
                         name="randomizeImages"
-                        ref={randomizeImagesInputRef} />
+                        ref={randomizeImagesInputRef}
+                        onChange={handleRandomizeImageOrderChange}
+                        checked={randomizeImageOrder} />
                     <label htmlFor="randomizeImages"> Randomize Image Order </label>
                 </div>
             </div>
