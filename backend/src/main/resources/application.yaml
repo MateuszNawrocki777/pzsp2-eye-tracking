@@ -21,3 +21,6 @@ app:
       secret: ${JWT_SECRET:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
       issuer: eye-tracking-api
       expiration-minutes: 60
+    admin:
+      email: ${APP_ADMIN_EMAIL:admin@eye-tracking.local}
+      password: ${APP_ADMIN_PASSWORD:ChangeMeAdmin123!}

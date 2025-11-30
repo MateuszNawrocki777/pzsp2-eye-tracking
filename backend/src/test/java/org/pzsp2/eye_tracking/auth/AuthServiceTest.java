@@ -44,7 +44,7 @@ class AuthServiceTest {
 
     @Test
     void registerShouldPersistNewUser() {
-        RegisterRequest request = new RegisterRequest("test@example.com", "StrongPass1", UserRole.USER);
+        RegisterRequest request = new RegisterRequest("test@example.com", "StrongPass1");
         given(userAccountRepository.existsByEmailIgnoreCase("test@example.com")).willReturn(false);
         given(passwordService.hashPassword("StrongPass1")).willReturn("hash");
 
@@ -72,7 +72,7 @@ class AuthServiceTest {
 
     @Test
     void registerShouldFailForDuplicateEmail() {
-        RegisterRequest request = new RegisterRequest("test@example.com", "StrongPass1", UserRole.USER);
+        RegisterRequest request = new RegisterRequest("test@example.com", "StrongPass1");
         given(userAccountRepository.existsByEmailIgnoreCase("test@example.com")).willReturn(true);
 
         assertThrows(ResponseStatusException.class, () -> authService.register(request));

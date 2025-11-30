@@ -24,3 +24,6 @@ app:
       secret: test-change-me-test-change-me-test-change-me-test-change-me-test-change-me-test-change-me
       issuer: eye-tracking-api
       expiration-minutes: 60
+    admin:
+      email: test-admin@eye-tracking.local
+      password: TestAdminPassword123!

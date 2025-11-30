@@ -9,6 +9,7 @@ import org.pzsp2.eye_tracking.auth.jwt.JwtService;
 import org.pzsp2.eye_tracking.auth.jwt.JwtToken;
 import org.pzsp2.eye_tracking.user.UserAccount;
 import org.pzsp2.eye_tracking.user.UserAccountRepository;
+import org.pzsp2.eye_tracking.user.UserRole;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Service
@@ -46,7 +48,7 @@ public class AuthService {
                 userId,
                 request.email().toLowerCase(),
                 hash,
-                request.role());
+                UserRole.USER);
 
         UserAccount saved = userAccountRepository.save(userAccount);
         JwtToken token = jwtService.generateToken(saved);

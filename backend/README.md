@@ -19,6 +19,7 @@
 	}
 	```
 - **Response:** returns the generated `userId`, normalized `email`, assigned `role`, `createdAt` timestamp, plus a freshly issued `token` and its `expiresAt` timestamp so the client can treat registration as an automatic login.
+- **Notes:** Only `USER` accounts can be created through this endpoint; firs `ADMIN` account is managed via configuration. `ADMIN` user then can change other user roles to `ADMIN` via endpoint ``
 
 ### Login
 
@@ -38,13 +39,12 @@
 - Start the backend (`./mvnw spring-boot:run`).
 - Open Swagger UI at [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) to explore and try all endpoints. The generated OpenAPI JSON is also available at `/v3/api-docs` for tooling integration.
 - JWT tokens use the HS512 algorithm, which **requires at least a 64-byte secret**. Export `JWT_SECRET` before starting the app; otherwise the built-in 64-character default will be used for local development.
-- Generate a strong secret (>= 64 chars) for your environment, for example:
+- Generate a strong secret (>= 64 chars) for your environment
 
-	```bash
-	openssl rand -hex 64
-	# fish shell
-	set -x JWT_SECRET (openssl rand -hex 64)
-	```
+## Default admin account
+
+- On startup the backend ensures administrator account is created using the credentials from `app.security.admin` in `application.yaml` (or environment variables `APP_ADMIN_EMAIL` / `APP_ADMIN_PASSWORD`).
+- The initializer will create the admin user if it doesn't exist yet or rotate its password when the configured secret changes.
 
 ## Testing
 
