@@ -18,6 +18,7 @@
     border-radius: 8px;
     padding: 20px;
     overflow-y: auto;
+    position: relative;
 }
 
 .new-test-content-container h1 {
@@ -93,4 +94,34 @@
 
 .new-test-time-input {
     width: 2.5rem;
+}
+
+.new-test-reset-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: #26282B;
+}
+
+.new-test-reset-button:hover {
+    border-color: #ff4a4a;
+}
+
+.new-test-reset-popup-message-content {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    margin: 10px 20px;
+}
+
+.new-test-reset-popup-buttons-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 30px;
+}
+
+.new-test-reset-popup-message-content h2 {
+    margin: 0;
+    text-align: center;
 }

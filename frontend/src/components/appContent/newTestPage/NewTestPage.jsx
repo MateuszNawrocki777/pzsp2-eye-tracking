@@ -5,14 +5,18 @@ import { useNewTest } from "../../../hooks/newTestContext";
 import ThumbnailWithContent from "../../thumbnails/ThumbnailWithContent";
 import CreateThumbnail from "../../thumbnails/CreateThumbnail";
 import ImageThumbnailWithButtons from "../../thumbnails/ImageThumbnailWithButtons";
+import PopupMessage from "../../popupMessage/PopupMessage";
 
 import "./NewTestPage.css";
 
 
 export default function NewTestPage() {
     const { images, setImages } = useNewTest();
+
+    const [showResetPopup, setShowResetPopup] = useState(false);
     
     const fileInputRef = useRef(null);
+
     const gazeTrackingInputRef = useRef(null);
     const displayTimeInputRef = useRef(null);
     const timeInputRef = useRef(null);
@@ -46,6 +50,9 @@ export default function NewTestPage() {
                         <h2>Finish Test</h2>
                     </div>
                 </div>
+                <button className="new-test-reset-button" onClick={() => setShowResetPopup(true)}>
+                    Reset
+                </button>
             </div>
             <input
                 type="file"
@@ -55,6 +62,9 @@ export default function NewTestPage() {
                 onChange={handleFileInputChange}
                 style={{ display: "none" }}
             />
+            {showResetPopup && (
+                <ResetPopup />
+            )}
         </div>
     );
 
@@ -177,6 +187,33 @@ export default function NewTestPage() {
                     <label htmlFor="randomizeImages"> Randomize Image Order </label>
                 </div>
             </div>
+        );
+    }
+
+    function ResetPopup() {
+        const { resetNewTestContext } = useNewTest();
+
+        return (
+            <PopupMessage onClickOutside={() => setShowResetPopup(false)}>
+                <div className="new-test-reset-popup-message-content">
+                    <h2>Are you sure</h2>
+                    <h2>you want to reset the test?</h2>
+                    <div className="new-test-reset-popup-buttons-container">
+                        <button 
+                            onClick={() => setShowResetPopup(false)}>
+                            Cancel
+                        </button>
+                        <button 
+                            className="dangerous-button"
+                            onClick={() => {
+                                resetNewTestContext();
+                                setShowResetPopup(false);
+                            }}>
+                            Reset
+                        </button>
+                    </div>
+                </div>
+            </PopupMessage>
         );
     }
 }
