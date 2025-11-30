@@ -1,0 +1,63 @@
+.header-container {
+    background-color: #353941;
+    width: 100vw;
+    height: 10vh;
+    max-height: 10vh;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    user-select: none;
+}
+
+.header-logo-div {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+}
+
+.header-navigation-div {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    gap: 20px;
+}
+
+.header-navigation-button,
+.header-navigation-login-button {
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: #26282B;
+    cursor: pointer;
+    transition: border-color 0.25s;
+    color: #fff;
+    text-decoration: none;
+    min-width: 75px;
+    text-align: center;
+}
+
+.header-navigation-button:hover,
+.header-navigation-login-button:hover {
+    border-color: #90B8F8;
+}
+
+.header-navigation-button:active,
+.header-navigation-button.active,
+.header-navigation-button[aria-current="page"],
+.header-navigation-login-button:active,
+.header-navigation-login-button.active,
+.header-navigation-login-button[aria-current="page"] {
+    border-color: #90B8F8;
+    font-weight: bold;
+}
+
+.header-navigation-button {
+    background-color: #26282B;
+}
+
+.header-navigation-login-button {
+    background-color: #5F85DB;
+}
