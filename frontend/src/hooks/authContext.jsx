@@ -7,11 +7,18 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    let token = null;
+    const [role, setRole] = useState("");
 
     async function login(email, password) {
         try {
-            await loginCall(email, password);
+            const response = await loginCall(email, password);
+
+            const token = response.data.token;
+            const role = response.data.role;
+
+            console.log("role:", role);
+
+            setRole(role);
             setIsLoggedIn(true);
         } catch (error) {
             console.error("Login failed:", error);
@@ -20,6 +27,7 @@ export function AuthProvider({ children }) {
     }
 
     function logout() {
+        setRole("");
         setIsLoggedIn(false);
     }
 
@@ -27,6 +35,7 @@ export function AuthProvider({ children }) {
         isLoggedIn,
         login,
         logout,
+        role,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
