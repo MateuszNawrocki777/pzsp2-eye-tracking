@@ -8,6 +8,7 @@ export function NewTestProvider({ children }) {
     const [enableDisplayTimeLeft, setEnableDisplayTimeLeft] = useState(true);
     const [secondsPerImage, setSecondsPerImage] = useState(10);
     const [randomizeImageOrder, setRandomizeImageOrder] = useState(false);
+    const [testName, setTestName] = useState("");
 
     function resetNewTestContext() {
         setImages([]);
@@ -15,6 +16,7 @@ export function NewTestProvider({ children }) {
         setEnableDisplayTimeLeft(true);
         setSecondsPerImage(10);
         setRandomizeImageOrder(false);
+        setTestName("");
     }
 
     const value = {
@@ -28,6 +30,8 @@ export function NewTestProvider({ children }) {
         setSecondsPerImage,
         randomizeImageOrder,
         setRandomizeImageOrder,
+        testName,
+        setTestName,
         resetNewTestContext,
     };
 

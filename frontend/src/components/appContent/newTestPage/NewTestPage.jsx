@@ -220,6 +220,7 @@ export default function NewTestPage() {
 
     function FinishTest() {
         const { isLoggedIn } = useAuth();
+        const { testName, setTestName } = useNewTest();
 
         {/* TODO: Make these buttons work */}
 
@@ -237,7 +238,12 @@ export default function NewTestPage() {
                             </>
                         }
                     </p>
-                    <input type="text" placeholder="Enter test name" ref={testNameInputRef} />
+                    <input 
+                        type="text" 
+                        placeholder="Enter test name" 
+                        ref={testNameInputRef} 
+                        defaultValue={testName}
+                        onBlur={() => setTestName(testNameInputRef.current.value)} />
                     <button className={`new-test-save-test-button ${!isLoggedIn ? "disabled-button" : ""}`} 
                         disabled={!isLoggedIn}>
                         Save Test
