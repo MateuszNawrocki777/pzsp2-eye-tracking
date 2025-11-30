@@ -1,8 +1,7 @@
 # Eye Tracking Backend
 
 ## Setup
-1. Run Docker Desktop
-2. docker-compose up -d --build
+`docker-compose up -d --build`
 
 ## Tests & Study Management API
 
@@ -16,7 +15,7 @@
       > **Important:** When testing in Postman, you must manually set the `Content-Type` for the `settings` part to `application/json`.
       ```json
       {
-          "title": "Eye Tracking Study 1",
+          "title": "Eye Tracking Test 1",
           "description": "Initial experiment",
           "dispGazeTracking": true,
           "dispTimeLeft": false,

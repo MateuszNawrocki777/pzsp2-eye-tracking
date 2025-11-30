@@ -27,7 +27,7 @@ public class FileStorageService {
     private final Path fileStorageLocation;
     private final StudyMaterialRepository materialRepository;
     private final StudyRepository studyRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper(); // Do JSONa
+    private final ObjectMapper objectMapper = new ObjectMapper(); // to JSON
 
     public FileStorageService(
             @Value("${file.upload-dir}") String uploadDir,
@@ -41,7 +41,7 @@ public class FileStorageService {
         try {
             Files.createDirectories(this.fileStorageLocation);
         } catch (Exception ex) {
-            throw new RuntimeException("Nie można utworzyć katalogu na pliki!", ex);
+            throw new RuntimeException("Can't create directory", ex);
         }
     }
 
@@ -50,7 +50,8 @@ public class FileStorageService {
 
             String imageUrl = materialRepository.findFirstByStudyOrderByDisplayOrderAsc(study)
                     .map(material -> {
-                        return org.springframework.web.servlet.support.ServletUriComponentsBuilder.fromCurrentContextPath()
+                        return org.springframework.web.servlet.support.ServletUriComponentsBuilder
+                                .fromCurrentContextPath()
                                 .path("/api/tests/files/")
                                 .path(material.getMaterialId().toString())
                                 .toUriString();
@@ -80,20 +81,23 @@ public class FileStorageService {
             return savedStudy.getStudyId();
 
         } catch (IOException e) {
-            throw new RuntimeException("Błąd podczas zapisywania ustawień JSON", e);
+            throw new RuntimeException("Error occured while saving JSON settings", e);
         }
     }
 
     private void storeSingleFile(MultipartFile file, Study study, int order) {
-        String originalFileName = StringUtils.cleanPath(file.getOriginalFilename() != null ? file.getOriginalFilename() : "unknown");
+        String originalFileName = StringUtils
+                .cleanPath(file.getOriginalFilename() != null ? file.getOriginalFilename() : "unknown");
 
         String extension = "";
         int i = originalFileName.lastIndexOf('.');
-        if (i > 0) extension = originalFileName.substring(i);
+        if (i > 0)
+            extension = originalFileName.substring(i);
         String storedFileName = UUID.randomUUID().toString() + extension;
 
         try {
-            Files.copy(file.getInputStream(), this.fileStorageLocation.resolve(storedFileName), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(file.getInputStream(), this.fileStorageLocation.resolve(storedFileName),
+                    StandardCopyOption.REPLACE_EXISTING);
 
             StudyMaterial material = new StudyMaterial();
             material.setStudy(study);
@@ -105,35 +109,38 @@ public class FileStorageService {
             materialRepository.save(material);
 
         } catch (IOException ex) {
-            throw new RuntimeException("Nie udało się zapisać pliku " + originalFileName, ex);
+            throw new RuntimeException("Couldn't save file " + originalFileName, ex);
         }
     }
 
     public Resource loadFileAsResource(UUID fileId) {
         StudyMaterial material = materialRepository.findById(fileId)
-                .orElseThrow(() -> new RuntimeException("Plik nie istnieje"));
+                .orElseThrow(() -> new RuntimeException("File does not exist"));
 
         try {
             Path filePath = this.fileStorageLocation.resolve(material.getFilePath()).normalize();
             Resource resource = new UrlResource(filePath.toUri());
-            if (resource.exists()) return resource;
-            else throw new RuntimeException("Plik nie znaleziony na dysku");
+            if (resource.exists())
+                return resource;
+            else
+                throw new RuntimeException("File not found");
         } catch (MalformedURLException ex) {
-            throw new RuntimeException("Błąd ścieżki", ex);
+            throw new RuntimeException("Wrong path", ex);
         }
     }
 
     public String getContentType(UUID fileId) {
-        return materialRepository.findById(fileId).map(StudyMaterial::getContentType).orElse("application/octet-stream");
+        return materialRepository.findById(fileId).map(StudyMaterial::getContentType)
+                .orElse("application/octet-stream");
     }
 
     public String getOriginalName(UUID fileId) {
-         return materialRepository.findById(fileId).map(StudyMaterial::getFileName).orElse("file");
+        return materialRepository.findById(fileId).map(StudyMaterial::getFileName).orElse("file");
     }
 
     public TestDetailsDto getTestDetails(UUID testId) {
         Study study = studyRepository.findById(testId)
-                .orElseThrow(() -> new RuntimeException("Nie znaleziono badania o ID: " + testId));
+                .orElseThrow(() -> new RuntimeException("Couldn't find study with the following ID: " + testId));
 
         List<StudyMaterial> materials = materialRepository.findAllByStudyOrderByDisplayOrderAsc(study);
 
@@ -149,7 +156,7 @@ public class FileStorageService {
             dto.setTimePerImageMs(settings.getTimePerImageMs());
             dto.setRandomizeOrder(settings.getRandomizeOrder());
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Błąd odczytu ustawień JSON z bazy", e);
+            throw new RuntimeException("Error occurred while reading settings", e);
         }
 
         List<String> links = materials.stream()
@@ -166,7 +173,7 @@ public class FileStorageService {
     @Transactional
     public void deleteTest(UUID testId) {
         Study study = studyRepository.findById(testId)
-                .orElseThrow(() -> new RuntimeException("Badanie nie istnieje"));
+                .orElseThrow(() -> new RuntimeException("Test does not exist"));
 
         List<StudyMaterial> materials = materialRepository.findAllByStudyOrderByDisplayOrderAsc(study);
 
@@ -175,7 +182,7 @@ public class FileStorageService {
                 Path path = this.fileStorageLocation.resolve(material.getFilePath());
                 Files.deleteIfExists(path);
             } catch (IOException e) {
-                System.err.println("Nie udało się usunąć pliku z dysku: " + material.getFilePath());
+                System.err.println("Couldn't delete file: " + material.getFilePath());
             }
         }
 
@@ -186,7 +193,7 @@ public class FileStorageService {
     @Transactional
     public void updateTestSettings(UUID testId, TestCreateRequest newSettings) {
         Study study = studyRepository.findById(testId)
-                .orElseThrow(() -> new RuntimeException("Badanie nie istnieje"));
+                .orElseThrow(() -> new RuntimeException("Test does not exist"));
 
         study.setTitle(newSettings.getTitle());
         study.setDescription(newSettings.getDescription());
@@ -194,7 +201,7 @@ public class FileStorageService {
         try {
             study.setSettings(objectMapper.writeValueAsString(newSettings));
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Błąd zapisu nowych ustawień", e);
+            throw new RuntimeException("Error occurred while saving settings", e);
         }
 
         studyRepository.save(study);
@@ -203,7 +210,7 @@ public class FileStorageService {
     @Transactional
     public void addFileToTest(UUID testId, MultipartFile file) {
         Study study = studyRepository.findById(testId)
-                .orElseThrow(() -> new RuntimeException("Badanie nie istnieje"));
+                .orElseThrow(() -> new RuntimeException("Test does not exist"));
 
         int currentCount = materialRepository.findAllByStudyOrderByDisplayOrderAsc(study).size();
 
@@ -213,7 +220,7 @@ public class FileStorageService {
     @Transactional
     public void deleteSingleFile(UUID fileId) {
         StudyMaterial material = materialRepository.findById(fileId)
-                .orElseThrow(() -> new RuntimeException("Plik nie istnieje"));
+                .orElseThrow(() -> new RuntimeException("File does not exist"));
 
         try {
             Path path = this.fileStorageLocation.resolve(material.getFilePath());
