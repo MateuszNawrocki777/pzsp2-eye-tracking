@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 
 import java.util.UUID;
@@ -25,11 +26,10 @@ public class TestController {
         this.fileStorageService = fileStorageService;
     }
 
-    @PostMapping(consumes = {"multipart/form-data"})
+    @PostMapping(consumes = { "multipart/form-data" })
     public ResponseEntity<UUID> createTest(
             @RequestPart("files") MultipartFile[] files,
-            @RequestPart("settings") TestCreateRequest settings
-    ) {
+            @ModelAttribute TestCreateRequest settings) {
         UUID newTestId = fileStorageService.createFullTest(settings, files, TEST_USER_ID);
         return ResponseEntity.ok(newTestId);
     }
@@ -73,8 +73,7 @@ public class TestController {
     @PostMapping("/{testId}/files")
     public ResponseEntity<Void> addFileToTest(
             @PathVariable UUID testId,
-            @RequestParam("file") MultipartFile file
-    ) {
+            @RequestParam("file") MultipartFile file) {
         fileStorageService.addFileToTest(testId, file);
         return ResponseEntity.ok().build();
     }
