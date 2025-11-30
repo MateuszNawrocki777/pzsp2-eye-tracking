@@ -69,4 +69,19 @@ public class TestController {
         fileStorageService.updateTestSettings(testId, settings);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/{testId}/files")
+    public ResponseEntity<Void> addFileToTest(
+            @PathVariable UUID testId,
+            @RequestParam("file") MultipartFile file
+    ) {
+        fileStorageService.addFileToTest(testId, file);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/files/{fileId}")
+    public ResponseEntity<Void> deleteFile(@PathVariable UUID fileId) {
+        fileStorageService.deleteSingleFile(fileId);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -199,4 +199,28 @@ public class FileStorageService {
 
         studyRepository.save(study);
     }
+
+    @Transactional
+    public void addFileToTest(UUID testId, MultipartFile file) {
+        Study study = studyRepository.findById(testId)
+                .orElseThrow(() -> new RuntimeException("Badanie nie istnieje"));
+
+        int currentCount = materialRepository.findAllByStudyOrderByDisplayOrderAsc(study).size();
+
+        storeSingleFile(file, study, currentCount + 1);
+    }
+
+    @Transactional
+    public void deleteSingleFile(UUID fileId) {
+        StudyMaterial material = materialRepository.findById(fileId)
+                .orElseThrow(() -> new RuntimeException("Plik nie istnieje"));
+
+        try {
+            Path path = this.fileStorageLocation.resolve(material.getFilePath());
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+        }
+
+        materialRepository.delete(material);
+    }
 }
