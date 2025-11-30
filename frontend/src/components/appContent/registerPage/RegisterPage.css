@@ -26,3 +26,11 @@
     margin: 0;
     font-size: 0.8em;
 }
+
+.register-page-container h1 {
+    font-size: 2em;
+}
+
+.register-page-content {
+    font-size: 0.8em;
+}

@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:eye_tracking_test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+    show-sql: false
+
+logging:
+  level:
+    org.springframework: WARN
+
+app:
+  security:
+    jwt:
+      # 64 characters (512 bits) default to satisfy HS512 requirements
+      secret: test-change-me-test-change-me-test-change-me-test-change-me-test-change-me-test-change-me
+      issuer: eye-tracking-api
+      expiration-minutes: 60
+    admin:
+      email: test-admin@eye-tracking.local
+      password: TestAdminPassword123!

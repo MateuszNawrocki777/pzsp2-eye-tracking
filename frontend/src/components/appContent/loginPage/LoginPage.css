@@ -26,3 +26,11 @@
     margin: 0;
     font-size: 0.8em;
 }
+
+.login-page-container h1 {
+    font-size: 2em;
+}
+
+.login-page-content {
+    font-size: 0.8em;
+}
