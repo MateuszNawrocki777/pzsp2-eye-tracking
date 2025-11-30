@@ -52,6 +52,7 @@ input[type="number"]:hover {
 
 button {
   cursor: pointer;
+  user-select: none;
 }
 
 .dangerous-button:hover {
