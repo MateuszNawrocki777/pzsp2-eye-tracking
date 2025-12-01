@@ -30,7 +30,7 @@ function Navigation() {
             {isLoggedIn && <NavLink to="/myTests" className={"header-navigation-button"}>My Tests</NavLink>}
             {role === "ADMIN" && <NavLink to="/admin" className={"header-navigation-button"}>Admin</NavLink>}
             {isLoggedIn ? (
-                <a onClick={logout} className={"header-navigation-button"}>Logout</a> //TODO: Implement logging out
+                <a onClick={logout} className={"header-navigation-button"}>Logout</a>
             ) : (
                 <NavLink to="/login" className={"header-navigation-login-button"}>Login</NavLink>
             )}
