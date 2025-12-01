@@ -1,6 +1,7 @@
 import { createContext, useContext, useState } from "react";
 
 import loginCall from "../services/api/loginCall";
+import registerCall from "../services/api/registerCall";
 
 
 const AuthContext = createContext(null);
@@ -26,6 +27,23 @@ export function AuthProvider({ children }) {
         }
     }
 
+    async function register(email, password) {
+        try {
+            const response = await registerCall(email, password);
+
+            const token = response.data.token;
+            const role = response.data.role;
+
+            console.log("role:", role);
+
+            setRole(role);
+            setIsLoggedIn(true);
+        } catch (error) {
+            console.error("Register failed:", error);
+            throw error;
+        }
+    }
+
     function logout() {
         setRole("");
         setIsLoggedIn(false);
@@ -34,6 +52,7 @@ export function AuthProvider({ children }) {
     const value = {
         isLoggedIn,
         login,
+        register,
         logout,
         role,
     };
