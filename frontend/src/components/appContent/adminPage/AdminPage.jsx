@@ -1,57 +1,41 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
+
+import adminGetUsersCall from "../../../services/api/adminGetUsersCall"
 
 import PopupMessage from "../../popupMessage/PopupMessage"
 
 import "./AdminPage.css"
 
 
-
-const EXAMPLE_USERS = [
-  {
-    "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "email": "string",
-    "role": "USER",
-    "banned": true,
-    "createdAt": "2025-12-01T00:16:29.166Z"
-  },
-  {
-    "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "email": "string",
-    "role": "USER",
-    "banned": true,
-    "createdAt": "2025-12-01T00:16:29.166Z"
-  },
-  {
-    "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "email": "string",
-    "role": "ADMIN",
-    "banned": false,
-    "createdAt": "2025-12-01T00:16:29.166Z"
-  },
-  {
-    "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "email": "string",
-    "role": "USER",
-    "banned": true,
-    "createdAt": "2025-12-01T00:16:29.166Z"
-  },
-  {
-    "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "email": "string",
-    "role": "USER",
-    "banned": true,
-    "createdAt": "2025-12-01T00:16:29.166Z"
-  },
-]
-
-
 export default function AdminPage() {
+    const [users, setUsers] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        async function fetchUsers() {
+            setIsLoading(true);
+            try {
+                const response = await adminGetUsersCall();
+                setUsers(response.data);
+            } catch (error) {
+                setError("Failed to fetch users");
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        fetchUsers();
+    }, []);
+
     return (
         <div className="admin-page-container">
             <div className="admin-page-content-container">
                 <h1>Admin Page</h1>
                 <div className="admin-page-users-list">
-                    {EXAMPLE_USERS.map((user, index) => (
+                    {isLoading && <p className="users-list-loading-message">Loading users...</p>}
+                    {error && <p className="users-list-error-message">{error}</p>}
+                    {!isLoading && !error && users.map((user, index) => (
                         <UserCard key={index} user={user} />
                     ))}
                 </div>
