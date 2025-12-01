@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 
 import adminGetUsersCall from "../../../services/api/adminGetUsersCall"
+import AdminBanUserCall from "../../../services/api/adminBanCall"
 
 import PopupMessage from "../../popupMessage/PopupMessage"
 
@@ -87,9 +88,10 @@ function UserCard({ user }) {
                             onClick={() => setShowBanPopup(false)}>
                             Cancel
                         </button>
+                        {console.log(user)}
                         <button 
                             className="dangerous-button"
-                            onClick={() => {console.log(`${user.banned ? 'Unbanning' : 'Banning'} user ${user.email}`); setShowBanPopup(false);}}>
+                            onClick={() => {AdminBanUserCall(user.userId, !user.banned); setShowBanPopup(false);}}>
                             {user.banned ? 'Unban' : 'Ban'}
                         </button>
                     </div>
