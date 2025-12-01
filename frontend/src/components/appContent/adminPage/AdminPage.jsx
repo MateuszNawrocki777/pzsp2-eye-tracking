@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 
 import adminGetUsersCall from "../../../services/api/adminGetUsersCall"
 import adminBanUserCall from "../../../services/api/adminBanCall"
+import adminPromoteUserCall from "../../../services/api/adminPromoteCall"
 
 import PopupMessage from "../../popupMessage/PopupMessage"
 
@@ -110,6 +111,18 @@ export default function AdminPage() {
     }
 
     function PromotePopupMessage() {
+        const handlePromoteUser = async () => {
+            try {
+                const newRole = user.role === 'ADMIN' ? 'USER' : 'ADMIN';
+                await adminPromoteUserCall(user.userId, newRole);
+                setRefreshFlag(!refreshFlag);
+            } catch (error) {
+                console.error("Failed to promote/demote user:", error);
+            } finally {
+                setShowPromotePopup(false);
+            }
+        };
+
         return (
             <PopupMessage onClickOutside={() => setShowPromotePopup(false)}>
                 <div className="user-card-popup-message-content">
@@ -122,7 +135,7 @@ export default function AdminPage() {
                         </button>
                         <button 
                             className="dangerous-button"
-                            onClick={() => {console.log(`${user.role === 'ADMIN' ? 'Demoting' : 'Promoting'} user ${user.email}`); setShowPromotePopup(false);}}>
+                            onClick={handlePromoteUser}>
                             {user.role === 'ADMIN' ? 'Demote' : 'Promote'}
                         </button>
                     </div>
