@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 
 import adminGetUsersCall from "../../../services/api/adminGetUsersCall"
-import AdminBanUserCall from "../../../services/api/adminBanCall"
+import adminBanUserCall from "../../../services/api/adminBanCall"
 
 import PopupMessage from "../../popupMessage/PopupMessage"
 
@@ -12,6 +12,7 @@ export default function AdminPage() {
     const [users, setUsers] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
+    const [refreshFlag, setRefreshFlag] = useState(false);
 
     useEffect(() => {
         async function fetchUsers() {
@@ -27,7 +28,7 @@ export default function AdminPage() {
         }
 
         fetchUsers();
-    }, []);
+    }, [refreshFlag]);
 
     return (
         <div className="admin-page-container">
@@ -43,10 +44,8 @@ export default function AdminPage() {
             </div>
         </div>
     )
-}
 
-
-function UserCard({ user }) {
+    function UserCard({ user }) {
     const [showBanPopup, setShowBanPopup] = useState(false);
     const [showPromotePopup, setShowPromotePopup] = useState(false);
 
@@ -78,6 +77,17 @@ function UserCard({ user }) {
     )
 
     function BanPopupMessage() {
+        const handleBanUser = async () => {
+            try {
+                await adminBanUserCall(user.userId, !user.banned);
+                setRefreshFlag(!refreshFlag);
+            } catch (error) {
+                console.error("Failed to ban/unban user:", error);
+            } finally {
+                setShowBanPopup(false);
+            }
+        };
+
         return (
             <PopupMessage onClickOutside={() => setShowBanPopup(false)}>
                 <div className="user-card-popup-message-content">
@@ -88,10 +98,9 @@ function UserCard({ user }) {
                             onClick={() => setShowBanPopup(false)}>
                             Cancel
                         </button>
-                        {console.log(user)}
                         <button 
                             className="dangerous-button"
-                            onClick={() => {AdminBanUserCall(user.userId, !user.banned); setShowBanPopup(false);}}>
+                            onClick={handleBanUser}>
                             {user.banned ? 'Unban' : 'Ban'}
                         </button>
                     </div>
@@ -121,4 +130,5 @@ function UserCard({ user }) {
             </PopupMessage>
         );
     }
+}
 }
