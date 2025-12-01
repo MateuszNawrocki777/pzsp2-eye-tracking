@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from "react";
 
+import { setAuthToken } from "../services/api/apiClient";
 import loginCall from "../services/api/loginCall";
 import registerCall from "../services/api/registerCall";
 
@@ -17,7 +18,7 @@ export function AuthProvider({ children }) {
             const token = response.data.token;
             const role = response.data.role;
 
-            console.log("role:", role);
+            setAuthToken(token);
 
             setRole(role);
             setIsLoggedIn(true);
@@ -34,7 +35,7 @@ export function AuthProvider({ children }) {
             const token = response.data.token;
             const role = response.data.role;
 
-            console.log("role:", role);
+            setAuthToken(token);
 
             setRole(role);
             setIsLoggedIn(true);
@@ -45,6 +46,7 @@ export function AuthProvider({ children }) {
     }
 
     function logout() {
+        setAuthToken(null);
         setRole("");
         setIsLoggedIn(false);
     }
