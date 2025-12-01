@@ -34,3 +34,7 @@
 .login-page-content {
     font-size: 0.8em;
 }
+
+.login-page-login-button .loading-button-loader-div {
+    max-height: 22px;
+}
