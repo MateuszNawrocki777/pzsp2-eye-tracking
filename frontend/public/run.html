@@ -7,23 +7,62 @@
     <script src="https://www.lactame.com/lib/ml/6.0.0/ml.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
     <script src="https://eyegestures.com/eyegestures.js"></script>
+
+    <style>
+      body {
+        margin: 0;
+        background: black;
+        overflow: hidden;
+      }
+      #displayImage {
+        width: 100vw;
+        height: 100vh;
+        object-fit: contain;
+        background-color: black;
+      }
+    </style>
   </head>
+
   <body>
     <video
       id="video"
       width="640"
       height="480"
       autoplay
-      style="display: block"
+      style="display: none"
     ></video>
+    <img id="displayImage" />
+
     <div id="status" style="display: none">Initializing...</div>
     <div id="error" style="display: none"></div>
 
     <script>
-      function onPoint(point, calibration) {
-        console.log("Predicted gaze:", point, "Calibration:", calibration);
+      let images = [];
+      let time = 0;
+      let index = 0;
 
-        // Wysyłamy dane do okna nadrzędnego
+      window.addEventListener("message", (event) => {
+        const data = event.data;
+        if (!data || !data.images) return;
+
+        images = data.images;
+        time = data.time;
+        index = 0;
+
+        if (images.length > 0) showNext();
+      });
+
+      function showNext() {
+        console.log("Image displayed");
+        document.getElementById("displayImage").src = images[index];
+
+        setTimeout(() => {
+          index++;
+          if (index < images.length) showNext();
+        }, time * 1000); // 1000 = 1 second
+      }
+
+      function onPoint(point, calibration) {
         if (window.opener) {
           window.opener.postMessage(
             { point, calibration },

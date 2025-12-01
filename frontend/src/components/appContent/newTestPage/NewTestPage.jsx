@@ -37,10 +37,28 @@ export default function NewTestPage() {
     event.target.value = null;
   }
 
+  //   function handleRun() {
+  //     console.log("RUN clicked!");
+  //     // navigate("/runTest");
+  //     window.open("/run.html", "_blank"); // otwiera w nowej karcie
+  //   }
   function handleRun() {
     console.log("RUN clicked!");
-    // navigate("/runTest");
-    window.open("/run.html", "_blank"); // otwiera w nowej karcie
+
+    const win = window.open("/run.html", "_blank");
+
+    // czekamy aż okno się załaduje
+    const sendImages = () => {
+      if (!win) return;
+      if (win.closed) return;
+
+      // wysyłamy listę obrazów
+      const time = Number(timeInputRef.current.value) || 10;
+      win.postMessage({ images, time }, window.location.origin);
+    };
+
+    // dajemy minimalne opóźnienie, aby run.html zdążył się załadować
+    setTimeout(sendImages, 300);
   }
 
   function handleRemoveImage(image) {
