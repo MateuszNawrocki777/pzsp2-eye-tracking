@@ -11,14 +11,14 @@
     <style>
       body {
         margin: 0;
-        background: black;
+        background: white;
         overflow: hidden;
       }
       #displayImage {
         width: 100vw;
         height: 100vh;
         object-fit: contain;
-        background-color: black;
+        background-color: white;
       }
     </style>
   </head>
@@ -38,31 +38,39 @@
 
     <script>
       let images = [];
-      let time = 0;
+      let time = 5; // domyślnie 5 sekund
       let index = 0;
+      let calibrationFinished = false;
 
       window.addEventListener("message", (event) => {
         const data = event.data;
         if (!data || !data.images) return;
 
         images = data.images;
-        time = data.time;
+        time = data.time || 5;
         index = 0;
 
-        if (images.length > 0) showNext();
+        if (images.length > 0 && calibrationFinished) startSlideshow();
       });
 
-      function showNext() {
-        console.log("Image displayed");
+      function startSlideshow() {
+        if (index >= images.length) return;
         document.getElementById("displayImage").src = images[index];
 
         setTimeout(() => {
           index++;
-          if (index < images.length) showNext();
-        }, time * 1000); // 1000 = 1 second
+          startSlideshow();
+        }, time * 1000);
       }
 
       function onPoint(point, calibration) {
+        console.log("Point:", point, "Calibration:", calibration);
+
+        if (!calibration && !calibrationFinished) {
+          calibrationFinished = true;
+          if (images.length > 0) startSlideshow();
+        }
+
         if (window.opener) {
           window.opener.postMessage(
             { point, calibration },
@@ -71,9 +79,11 @@
         }
       }
 
-      const gestures = new EyeGestures("video", onPoint);
-      gestures.visible();
-      gestures.start();
+      window.addEventListener("load", () => {
+        const gestures = new EyeGestures("video", onPoint);
+        gestures.visible();
+        gestures.start();
+      });
     </script>
   </body>
 </html>
