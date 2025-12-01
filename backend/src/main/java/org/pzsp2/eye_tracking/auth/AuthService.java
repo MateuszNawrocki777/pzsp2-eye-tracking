@@ -71,6 +71,10 @@ public class AuthService {
             throw new ResponseStatusException(UNAUTHORIZED, "Invalid email or password");
         }
 
+        if (account.isBanned()) {
+            throw new ResponseStatusException(FORBIDDEN, "Account is banned");
+        }
+
         JwtToken token = jwtService.generateToken(account);
 
         return new LoginResponse(account.getUserId(), account.getRole(), token.token(), token.expiresAt());

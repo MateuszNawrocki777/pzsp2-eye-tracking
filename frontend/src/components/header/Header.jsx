@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
+
 
 import { useAuth } from '../../hooks/authContext.jsx'
 
@@ -9,7 +10,10 @@ export default function Header() {
 
     return (
         <div className="header-container">
-            <div className='header-logo-div'>Logo placeholder</div>
+            <div className='header-logo-div'>
+                <img src={"./logo.png"} alt="Logo" className='header-logo-image'/>
+                <h2>EyeTracking</h2>
+            </div>
             <Navigation />
         </div>
     )
@@ -17,7 +21,8 @@ export default function Header() {
 
 
 function Navigation() {
-    const { isLoggedIn, logout } = useAuth();
+    const { isLoggedIn, logout, role } = useAuth();
+    const navigate = useNavigate();
 
     return (
         <div className='header-navigation-div'>
@@ -25,8 +30,13 @@ function Navigation() {
             <NavLink to="/about" className={"header-navigation-button"}>About</NavLink>
             <NavLink to="/newTest" className={"header-navigation-button"}>New Test</NavLink>
             {isLoggedIn && <NavLink to="/myTests" className={"header-navigation-button"}>My Tests</NavLink>}
+            {role === "ADMIN" && <NavLink to="/admin" className={"header-navigation-button"}>Admin</NavLink>}
             {isLoggedIn ? (
-                <a onClick={logout} className={"header-navigation-button"}>Logout</a> //TODO: Implement logging out
+                <a 
+                    onClick={() => {logout(); navigate("/");}} 
+                    className={"header-navigation-button"}>
+                        Logout
+                </a>
             ) : (
                 <NavLink to="/login" className={"header-navigation-login-button"}>Login</NavLink>
             )}

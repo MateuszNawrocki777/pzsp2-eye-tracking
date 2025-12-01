@@ -34,3 +34,7 @@
 .register-page-content {
     font-size: 0.8em;
 }
+
+.register-page-register-button .loading-button-loader-div {
+    max-height: 22px;
+}
