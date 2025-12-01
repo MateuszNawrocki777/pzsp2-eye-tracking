@@ -69,7 +69,11 @@
     min-width: 100px;
 }
 
-.user-card-container:nth-child(even) button {
+.user-card-container:nth-child(even) .user-card-actions-ban-button {
+    background-color: #26282B;
+}
+
+.user-card-container:nth-child(even) .user-card-actions-promote-button {
     background-color: #26282B;
 }
 
@@ -79,4 +83,23 @@
 
 .user-card-actions-promote-button {
     min-width: 200px;
+}
+
+.user-card-popup-message-content {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    margin: 10px 20px;
+}
+
+.user-card-popup-buttons-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 30px;
+}
+
+.user-card-popup-message-content h2 {
+    margin: 0;
+    text-align: center;
 }

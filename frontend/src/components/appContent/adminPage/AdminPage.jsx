@@ -1,3 +1,7 @@
+import { useState } from "react"
+
+import PopupMessage from "../../popupMessage/PopupMessage"
+
 import "./AdminPage.css"
 
 
@@ -58,6 +62,9 @@ export default function AdminPage() {
 
 
 function UserCard({ user }) {
+    const [showBanPopup, setShowBanPopup] = useState(false);
+    const [showPromotePopup, setShowPromotePopup] = useState(false);
+
     return (
         <div className={`user-card-container`}>
             <div className="user-card-info">
@@ -67,9 +74,65 @@ function UserCard({ user }) {
                 <div className="user-card-info-createdAt"><strong>Created At:</strong> {new Date(user.createdAt).toLocaleString()}</div>
             </div>
             <div className="user-card-actions">
-                <button className="dangerous-button user-card-actions-ban-button">{user.banned ? 'Unban' : 'Ban'}</button>
-                <button className="dangerous-button user-card-actions-promote-button">{user.role === 'ADMIN' ? 'Demote to User' : 'Promote to Admin'}</button>
+                <button className="dangerous-button user-card-actions-ban-button"
+                    onClick={() => setShowBanPopup(true)}>
+                    {user.banned ? 'Unban' : 'Ban'}
+                    </button>
+                <button className="dangerous-button user-card-actions-promote-button"
+                    onClick={() => setShowPromotePopup(true)}>
+                    {user.role === 'ADMIN' ? 'Demote to User' : 'Promote to Admin'}
+                </button>
             </div>
+            {showBanPopup && (
+                <BanPopupMessage />
+            )}
+            {showPromotePopup && (
+                <PromotePopupMessage />
+            )}
         </div>
     )
+
+    function BanPopupMessage() {
+        return (
+            <PopupMessage onClickOutside={() => setShowBanPopup(false)}>
+                <div className="user-card-popup-message-content">
+                    <h2>Are you sure</h2>
+                    <h2>you want to {user.banned ? 'unban' : 'ban'} this user?</h2>
+                    <div className="user-card-popup-buttons-container">
+                        <button 
+                            onClick={() => setShowBanPopup(false)}>
+                            Cancel
+                        </button>
+                        <button 
+                            className="dangerous-button"
+                            onClick={() => {console.log(`${user.banned ? 'Unbanning' : 'Banning'} user ${user.email}`); setShowBanPopup(false);}}>
+                            {user.banned ? 'Unban' : 'Ban'}
+                        </button>
+                    </div>
+                </div>
+            </PopupMessage>
+        );
+    }
+
+    function PromotePopupMessage() {
+        return (
+            <PopupMessage onClickOutside={() => setShowPromotePopup(false)}>
+                <div className="user-card-popup-message-content">
+                    <h2>Are you sure</h2>
+                    <h2>you want to {user.role === 'ADMIN' ? 'demote' : 'promote'} this user?</h2>
+                    <div className="user-card-popup-buttons-container">
+                        <button 
+                            onClick={() => setShowPromotePopup(false)}>
+                            Cancel
+                        </button>
+                        <button 
+                            className="dangerous-button"
+                            onClick={() => {console.log(`${user.role === 'ADMIN' ? 'Demoting' : 'Promoting'} user ${user.email}`); setShowPromotePopup(false);}}>
+                            {user.role === 'ADMIN' ? 'Demote' : 'Promote'}
+                        </button>
+                    </div>
+                </div>
+            </PopupMessage>
+        );
+    }
 }
