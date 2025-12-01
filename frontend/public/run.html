@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>EyeGestures Test</title>
+    <link rel="stylesheet" href="https://eyegestures.com/eyegestures.css" />
+    <script src="https://www.lactame.com/lib/ml/6.0.0/ml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+    <script src="https://eyegestures.com/eyegestures.js"></script>
+
+    <style>
+      body {
+        margin: 0;
+        background: white;
+        overflow: hidden;
+      }
+      #displayImage {
+        width: 100vw;
+        height: 100vh;
+        object-fit: contain;
+        background-color: white;
+      }
+    </style>
+  </head>
+
+  <body>
+    <video
+      id="video"
+      width="640"
+      height="480"
+      autoplay
+      style="display: none"
+    ></video>
+    <img id="displayImage" />
+
+    <div id="status" style="display: none">Initializing...</div>
+    <div id="error" style="display: none"></div>
+
+    <script>
+      let images = [];
+      let time = 5; // domyślnie 5 sekund
+      let index = 0;
+      let calibrationFinished = false;
+
+      window.addEventListener("message", (event) => {
+        const data = event.data;
+        if (!data || !data.images) return;
+
+        images = data.images;
+        time = data.time || 5;
+        index = 0;
+
+        if (images.length > 0 && calibrationFinished) startSlideshow();
+      });
+
+      function startSlideshow() {
+        if (index >= images.length) return;
+        document.getElementById("displayImage").src = images[index];
+
+        setTimeout(() => {
+          index++;
+          startSlideshow();
+        }, time * 1000);
+      }
+
+      function onPoint(point, calibration) {
+        console.log("Point:", point, "Calibration:", calibration);
+
+        if (!calibration && !calibrationFinished) {
+          calibrationFinished = true;
+          if (images.length > 0) startSlideshow();
+        }
+
+        if (window.opener) {
+          window.opener.postMessage(
+            { point, calibration },
+            window.location.origin
+          );
+        }
+      }
+
+      window.addEventListener("load", () => {
+        const gestures = new EyeGestures("video", onPoint);
+        gestures.visible();
+        gestures.start();
+      });
+    </script>
+  </body>
+</html>

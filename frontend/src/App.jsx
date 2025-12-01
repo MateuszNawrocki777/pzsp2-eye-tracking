@@ -1,23 +1,23 @@
-import { BrowserRouter } from 'react-router-dom'
+import { BrowserRouter } from "react-router-dom";
 
-import { AuthProvider } from './hooks/authContext.jsx'
-import { NewTestProvider } from './hooks/newTestContext.jsx'
-import Header from './components/header/Header'
-import AppContent from './components/appContent/AppContent.jsx'
+import { AuthProvider } from "./hooks/authContext.jsx";
+import { NewTestProvider } from "./hooks/newTestContext.jsx";
+import Header from "./components/header/Header";
+import AppContent from "./components/appContent/AppContent.jsx";
 
-import './App.css'
+import "./App.css";
 
 function App() {
-    return (
-        <AuthProvider>
-        <NewTestProvider>
+  return (
+    <AuthProvider>
+      <NewTestProvider>
         <BrowserRouter>
-            <Header />
-            <AppContent />
+          <Header />
+          <AppContent />
         </BrowserRouter>
-        </NewTestProvider>
-        </AuthProvider>
-    )
+      </NewTestProvider>
+    </AuthProvider>
+  );
 }
 
-export default App
+export default App;
