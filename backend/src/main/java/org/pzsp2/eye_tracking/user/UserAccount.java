@@ -32,6 +32,9 @@ public class UserAccount {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "is_banned", nullable = false)
+    private boolean banned;
+
     protected UserAccount() {
         // for JPA
     }
@@ -41,6 +44,7 @@ public class UserAccount {
         this.email = email;
         this.passwordHash = passwordHash;
         this.role = role;
+        this.banned = false;
     }
 
     @PrePersist
@@ -70,5 +74,17 @@ public class UserAccount {
 
     public void updatePasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public boolean isBanned() {
+        return banned;
+    }
+
+    public void setBanned(boolean banned) {
+        this.banned = banned;
+    }
+
+    public void setRole(UserRole role) {
+        this.role = role;
     }
 }
