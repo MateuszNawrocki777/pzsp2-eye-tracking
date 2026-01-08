@@ -1,0 +1,43 @@
+version: "3"
+services:
+  frontend:
+    container_name: eye_tracking_frontend
+    build: ./frontend
+    image: frontend:1.0
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    ports:
+      - 5173:5173
+
+  backend:
+    container_name: eye_tracking_backend
+    build: ./backend
+    image: backend:1.0
+    stdin_open: true 
+    tty: true        
+    ports:
+      - 8080:8080
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/eye_tracking_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: admin123
+      # FRONTEND_URL: http://frontend:5173
+
+    depends_on:
+      - postgres
+      
+  postgres:
+    image: postgres:16
+    container_name: eye_tracking_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: eye_tracking_db
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  pgdata:

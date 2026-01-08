@@ -1,0 +1,8 @@
+FROM eclipse-temurin:21-jre-alpine
+
+WORKDIR /app
+
+# Kopiujemy gotowy JAR (zbudowany lokalnie przez Maven)
+COPY target/eye-tracking-0.0.1-SNAPSHOT.jar app.jar
+
+ENTRYPOINT ["java","-jar","app.jar"]
