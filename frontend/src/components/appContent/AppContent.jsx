@@ -5,6 +5,7 @@ import RegisterPage from "./registerPage/RegisterPage";
 import PageNotFound from "./pageNotFound/PageNotFound";
 import NewTestPage from "./newTestPage/NewTestPage";
 import AdminPage from "./adminPage/AdminPage";
+import RunTestPage from "./runTestPage/RunTestPage";
 
 import "./AppContent.css";
 
@@ -21,6 +22,7 @@ export default function AppContent() {
         <Route path="/newTest" element={<NewTestPage />} />
         <Route path="/myTests" element={<div>My Tests page</div>} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/runTest" element={<RunTestPage />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </div>

@@ -13,6 +13,8 @@ import PopupMessage from "../../popupMessage/PopupMessage";
 import "./NewTestPage.css";
 
 export default function NewTestPage() {
+  const navigate = useNavigate();
+
   const { images, setImages } = useNewTest();
 
   const [showResetPopup, setShowResetPopup] = useState(false);
@@ -35,22 +37,6 @@ export default function NewTestPage() {
     const newImages = files.map((file) => URL.createObjectURL(file));
     setImages((prevImages) => [...prevImages, ...newImages]);
     event.target.value = null;
-  }
-
-  function handleRun() {
-    console.log("RUN clicked!");
-    const win = window.open("/run.html", "_blank");
-
-    const sendImages = () => {
-      if (!win) return;
-      if (win.closed) return;
-
-      const time = Number(timeInputRef.current.value) || 10;
-      win.postMessage({ images, time }, window.location.origin);
-    };
-
-    // dajemy minimalne opóźnienie, aby run.html zdążył się załadować
-    setTimeout(sendImages, 300);
   }
 
   function handleRemoveImage(image) {
@@ -277,7 +263,7 @@ export default function NewTestPage() {
           >
             Save Test
           </button>
-          <button onClick={handleRun}>Run Test</button>
+          <button onClick={() => navigate("/runTest")}>Run Test</button>
         </div>
       </div>
     );
