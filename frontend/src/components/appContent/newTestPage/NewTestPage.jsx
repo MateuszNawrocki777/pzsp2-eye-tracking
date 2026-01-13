@@ -6,7 +6,6 @@ import { useNewTest } from "../../../hooks/newTestContext";
 
 import ThumbnailWithContent from "../../thumbnails/ThumbnailWithContent";
 import CreateThumbnail from "../../thumbnails/CreateThumbnail";
-import DataReceiver from "./DataReceiver";
 import ImageThumbnailWithButtons from "../../thumbnails/ImageThumbnailWithButtons";
 import PopupMessage from "../../popupMessage/PopupMessage";
 
