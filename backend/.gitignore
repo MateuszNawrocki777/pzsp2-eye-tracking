@@ -1,7 +1,5 @@
 HELP.md
 target/*
-!target/
-!target/eye-tracking-0.0.1-SNAPSHOT.jar
 
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
