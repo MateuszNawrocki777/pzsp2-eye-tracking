@@ -1,9 +1,101 @@
 # Eye Tracking Backend
 
 ## Setup
-1. Run Docker Desktop
-2. `docker-compose up -d`
-3. `mvn spring-boot:run`
+`docker-compose up -d --build`
+
+## Tests & Study Management API
+
+### Create a new Study (Test)
+
+- **Endpoint:** `POST /api/tests`
+- **Type:** `multipart/form-data`
+- **Body:**
+    - `files` (Key): Select one or more files (images/PDFs).
+    - `settings` (Key): JSON object containing study configuration.
+      > **Important:** When testing in Postman, you must manually set the `Content-Type` for the `settings` part to `application/json`.
+      ```json
+      {
+          "title": "Eye Tracking Test 1",
+          "description": "Initial experiment",
+          "dispGazeTracking": true,
+          "dispTimeLeft": false,
+          "timePerImageMs": 5000,
+          "randomizeOrder": true
+      }
+      ```
+- **Response:** Returns the `UUID` of the created study.
+
+### Get All Studies
+
+- **Endpoint:** `GET /api/tests`
+- **Response:** Returns a list of summaries for all studies created by the user (currently using a test user).
+    ```json
+    [
+        {
+            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "title": "Eye Tracking Study 1",
+            "firstImageLink": "http://localhost:8080/api/tests/files/c871578f-..."
+        }
+    ]
+    ```
+
+### Get Study Details
+
+- **Endpoint:** `GET /api/tests/{testId}`
+- **Response:** Returns full study settings and a list of links to all associated files.
+    ```json
+    {
+        "id": "...",
+        "title": "Eye Tracking Study 1",
+        "description": "Initial experiment",
+        "dispGazeTracking": true,
+        "dispTimeLeft": false,
+        "timePerImageMs": 5000,
+        "randomizeOrder": true,
+        "fileLinks": [
+            "http://localhost:8080/api/tests/files/...",
+            "http://localhost:8080/api/tests/files/..."
+        ]
+    }
+    ```
+
+### Update Study Settings
+
+- **Endpoint:** `PUT /api/tests/{testId}`
+- **Body:** JSON object (Raw). Note: This endpoint updates metadata only, not files.
+    ```json
+    {
+        "title": "Updated Title",
+        "description": "Updated description",
+        "dispGazeTracking": false,
+        "dispTimeLeft": true,
+        "timePerImageMs": 3000,
+        "randomizeOrder": false
+    }
+    ```
+- **Response:** `200 OK`
+
+### Delete Study
+
+- **Endpoint:** `DELETE /api/tests/{testId}`
+- **Effect:** Removes the study entry from the database and physically deletes all associated files from the server storage (`uploads_data` volume).
+- **Response:** `204 No Content`
+
+### Manage Individual Files
+
+#### Add file to existing study
+- **Endpoint:** `POST /api/tests/{testId}/files`
+- **Type:** `multipart/form-data`
+- **Body:**
+    - `file`: Single file to append to the study.
+
+#### Delete specific file
+- **Endpoint:** `DELETE /api/tests/files/{fileId}`
+- **Response:** `204 No Content`
+
+#### View/Download file
+- **Endpoint:** `GET /api/tests/files/{fileId}`
+- **Response:** Binary stream of the file (image or PDF).
 
 ## Authentication API
 
