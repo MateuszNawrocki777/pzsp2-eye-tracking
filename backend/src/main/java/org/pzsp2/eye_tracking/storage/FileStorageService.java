@@ -1,6 +1,9 @@
 package org.pzsp2.eye_tracking.storage;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.server.ResponseStatusException;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 import org.pzsp2.eye_tracking.storage.dto.TestCreateRequest;
 import org.pzsp2.eye_tracking.storage.dto.TestListItemDto;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,21 +48,22 @@ public class FileStorageService {
         }
     }
 
-    public java.util.List<TestListItemDto> getAllTests() {
-        return studyRepository.findAll().stream().map(study -> {
+    public java.util.List<TestListItemDto> getAllTestsForResearcher(UUID researcherId) {
+        return studyRepository.findAll().stream()
+                .filter(study -> researcherId.equals(study.getResearcherId()))
+                .map(study -> {
+                    String imageUrl = materialRepository.findFirstByStudyOrderByDisplayOrderAsc(study)
+                            .map(material -> {
+                                return org.springframework.web.servlet.support.ServletUriComponentsBuilder
+                                        .fromCurrentContextPath()
+                                        .path("/api/tests/files/")
+                                        .path(material.getMaterialId().toString())
+                                        .toUriString();
+                            })
+                            .orElse(null);
 
-            String imageUrl = materialRepository.findFirstByStudyOrderByDisplayOrderAsc(study)
-                    .map(material -> {
-                        return org.springframework.web.servlet.support.ServletUriComponentsBuilder
-                                .fromCurrentContextPath()
-                                .path("/api/tests/files/")
-                                .path(material.getMaterialId().toString())
-                                .toUriString();
-                    })
-                    .orElse(null);
-
-            return new TestListItemDto(study.getStudyId(), study.getTitle(), imageUrl);
-        }).collect(java.util.stream.Collectors.toList());
+                    return new TestListItemDto(study.getStudyId(), study.getTitle(), imageUrl);
+                }).collect(java.util.stream.Collectors.toList());
     }
 
     @Transactional
@@ -138,9 +142,13 @@ public class FileStorageService {
         return materialRepository.findById(fileId).map(StudyMaterial::getFileName).orElse("file");
     }
 
-    public TestDetailsDto getTestDetails(UUID testId) {
-        Study study = studyRepository.findById(testId)
-                .orElseThrow(() -> new RuntimeException("Couldn't find study with the following ID: " + testId));
+    public TestDetailsDto getTestDetailsForResearcher(UUID testId, UUID researcherId) {
+        Study study = studyRepository.findById(testId).orElseThrow(
+                () -> new ResponseStatusException(NOT_FOUND, "Couldn't find study with the following ID: " + testId));
+
+        if (!researcherId.equals(study.getResearcherId())) {
+            throw new ResponseStatusException(FORBIDDEN, "Access denied");
+        }
 
         List<StudyMaterial> materials = materialRepository.findAllByStudyOrderByDisplayOrderAsc(study);
 
@@ -171,9 +179,13 @@ public class FileStorageService {
     }
 
     @Transactional
-    public void deleteTest(UUID testId) {
+    public void deleteTestForResearcher(UUID testId, UUID researcherId) {
         Study study = studyRepository.findById(testId)
-                .orElseThrow(() -> new RuntimeException("Test does not exist"));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Test does not exist"));
+
+        if (!researcherId.equals(study.getResearcherId())) {
+            throw new ResponseStatusException(FORBIDDEN, "Access denied");
+        }
 
         List<StudyMaterial> materials = materialRepository.findAllByStudyOrderByDisplayOrderAsc(study);
 
@@ -191,9 +203,13 @@ public class FileStorageService {
     }
 
     @Transactional
-    public void updateTestSettings(UUID testId, TestCreateRequest newSettings) {
+    public void updateTestSettingsForResearcher(UUID testId, TestCreateRequest newSettings, UUID researcherId) {
         Study study = studyRepository.findById(testId)
-                .orElseThrow(() -> new RuntimeException("Test does not exist"));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Test does not exist"));
+
+        if (!researcherId.equals(study.getResearcherId())) {
+            throw new ResponseStatusException(FORBIDDEN, "Access denied");
+        }
 
         study.setTitle(newSettings.getTitle());
         study.setDescription(newSettings.getDescription());
@@ -208,9 +224,13 @@ public class FileStorageService {
     }
 
     @Transactional
-    public void addFileToTest(UUID testId, MultipartFile file) {
+    public void addFileToTestForResearcher(UUID testId, MultipartFile file, UUID researcherId) {
         Study study = studyRepository.findById(testId)
-                .orElseThrow(() -> new RuntimeException("Test does not exist"));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Test does not exist"));
+
+        if (!researcherId.equals(study.getResearcherId())) {
+            throw new ResponseStatusException(FORBIDDEN, "Access denied");
+        }
 
         int currentCount = materialRepository.findAllByStudyOrderByDisplayOrderAsc(study).size();
 
@@ -218,9 +238,13 @@ public class FileStorageService {
     }
 
     @Transactional
-    public void deleteSingleFile(UUID fileId) {
+    public void deleteSingleFileForResearcher(UUID fileId, UUID researcherId) {
         StudyMaterial material = materialRepository.findById(fileId)
-                .orElseThrow(() -> new RuntimeException("File does not exist"));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "File does not exist"));
+
+        if (material.getStudy() == null || !researcherId.equals(material.getStudy().getResearcherId())) {
+            throw new ResponseStatusException(FORBIDDEN, "Access denied");
+        }
 
         try {
             Path path = this.fileStorageLocation.resolve(material.getFilePath());
