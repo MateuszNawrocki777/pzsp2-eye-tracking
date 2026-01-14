@@ -2,6 +2,8 @@ import { useRef, useState, useEffect } from 'react'
 
 import { useNewTest } from '../../../hooks/newTestContext'
 
+import Heatmap from '../../heatmap/Heatmap';
+
 import './RunTestPage.css'
 
 
@@ -20,7 +22,11 @@ export default function RunTestPage() {
 
     return (
         <div className="run-test-page-container">
+            {!results ? (
             <button onClick={handleRun}>Start Test</button>
+            ) : (
+                <Heatmap image={images[0]} points={results} />
+            )}
         </div>
     )
 

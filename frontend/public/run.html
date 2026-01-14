@@ -108,7 +108,7 @@
       }
 
       function onPoint(point, calibration) {
-        // console.log("Point:", point, "Calibration:", calibration);
+        // console.log("Point:", point[0]/window.innerWidth, " ", point[1]/window.innerHeight, "Calibration:", calibration);
 
         if (!calibration && !calibrationFinished) {
           calibrationFinished = true;
@@ -125,7 +125,7 @@
           );
         }
 
-        if (!calibration) gazePoints.push({ point });
+        if (!calibration) gazePoints.push([point[0] / window.innerWidth, point[1] / window.innerHeight]);
       }
 
       window.addEventListener("load", () => {
