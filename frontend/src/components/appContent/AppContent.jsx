@@ -6,6 +6,7 @@ import PageNotFound from "./pageNotFound/PageNotFound";
 import NewTestPage from "./newTestPage/NewTestPage";
 import AdminPage from "./adminPage/AdminPage";
 import RunTestPage from "./runTestPage/RunTestPage";
+import HomePage from "./homePage/HomePage";
 
 import "./AppContent.css";
 
@@ -15,7 +16,7 @@ export default function AppContent() {
   return (
     <div className="app-content-container">
       <Routes>
-        <Route path="/" element={<div>Home page</div>} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/about" element={<div>About page</div>} />
