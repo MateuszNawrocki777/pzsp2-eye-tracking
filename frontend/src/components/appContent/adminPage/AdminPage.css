@@ -1,0 +1,116 @@
+.admin-page-container {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.admin-page-content-container {
+    height: 80%;
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 20px;
+    background-color: #353941;
+    border-radius: 8px;
+    padding: 20px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.admin-page-content-container h1 {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.admin-page-users-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.user-card-container {
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-card-container:nth-child(odd) {
+    background-color: #26282B;
+}
+
+.user-card-info {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+}
+
+.user-card-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+}
+
+.user-card-info-email {
+    min-width: 300px;
+}
+
+.user-card-info-role {
+    min-width: 100px;
+    text-transform: capitalize;
+}
+
+.user-card-info-banned {
+    min-width: 100px;
+}
+
+.user-card-container:nth-child(even) .user-card-actions-ban-button {
+    background-color: #26282B;
+}
+
+.user-card-container:nth-child(even) .user-card-actions-promote-button {
+    background-color: #26282B;
+}
+
+.user-card-actions-ban-button {
+    min-width: 100px;
+}
+
+.user-card-actions-promote-button {
+    min-width: 200px;
+}
+
+.user-card-popup-message-content {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    margin: 10px 20px;
+}
+
+.user-card-popup-buttons-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 30px;
+}
+
+.user-card-popup-message-content h2 {
+    margin: 0;
+    text-align: center;
+}
+
+.users-list-loading-message {
+    text-align: center;
+    font-size: 24px;
+}
+
+.users-list-error-message {
+    text-align: center;
+    font-size: 24px;
+    color: #ff4a4a;
+}

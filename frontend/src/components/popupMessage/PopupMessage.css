@@ -1,0 +1,17 @@
+.popup-message-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.popup-message-container {
+    background-color: #26282B;
+    border-radius: 8px;
+    padding: 20px;
+}
