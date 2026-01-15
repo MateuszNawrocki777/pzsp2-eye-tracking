@@ -9,6 +9,8 @@ import CreateThumbnail from "../../thumbnails/CreateThumbnail";
 import ImageThumbnailWithButtons from "../../thumbnails/ImageThumbnailWithButtons";
 import PopupMessage from "../../popupMessage/PopupMessage";
 
+import createTestCall from "../../../services/api/createTestCall";
+
 import "./NewTestPage.css";
 
 export default function NewTestPage() {
@@ -27,6 +29,22 @@ export default function NewTestPage() {
   const timeInputRef = useRef(null);
   const randomizeImagesInputRef = useRef(null);
 
+  const {
+    // images,
+    // setImages,
+    testName,
+    setTestName,
+    secondsPerImage,
+    setSecondsPerImage,
+    randomizeImageOrder,
+    setRandomizeImageOrder,
+    enableDisplayGazeTracking,
+    setEnableDisplayGazeTracking,
+    enableDisplayTimeLeft,
+    setEnableDisplayTimeLeft,
+    resetNewTestContext,
+  } = useNewTest();
+
   function handleAddImageClick() {
     fileInputRef.current.click();
   }
@@ -37,9 +55,45 @@ export default function NewTestPage() {
     setImages((prevImages) => [...prevImages, ...newImages]);
     event.target.value = null;
   }
+  // function handleFileInputChange(event) {
+  //   const files = Array.from(event.target.files);
+
+  //   const newImages = files.map((file) => ({
+  //     file,
+  //     preview: URL.createObjectURL(file),
+  //   }));
+
+  //   setImages((prev) => [...prev, ...newImages]);
+  //   event.target.value = null;
+  // }
 
   function handleRemoveImage(image) {
     setImages((prevImages) => prevImages.filter((img) => img !== image));
+  }
+
+  async function handleCreateTest() {
+    const formData = new FormData();
+
+    // images.forEach((img) => {
+    //   formData.append("files", img.file);
+    // });
+
+    images.forEach((img) => {
+      formData.append("files", img);
+    });
+
+    formData.append("testName", testName);
+    formData.append("secondsPerImage", secondsPerImage);
+    formData.append("randomizeImageOrder", randomizeImageOrder);
+    formData.append("enableDisplayGazeTracking", enableDisplayGazeTracking);
+    formData.append("enableDisplayTimeLeft", enableDisplayTimeLeft);
+
+    // Sprawdzenie
+    // for (let pair of formData.entries()) {
+    //   console.log(pair[0], pair[1]);
+    // }
+
+    await createTestCall(formData);
   }
 
   return (
@@ -231,10 +285,6 @@ export default function NewTestPage() {
     const { isLoggedIn } = useAuth();
     const { testName, setTestName } = useNewTest();
 
-    {
-      /* TODO: Make these buttons work */
-    }
-
     return (
       <div className="new-test-control-panel">
         <h2>Finish Test</h2>
@@ -259,6 +309,7 @@ export default function NewTestPage() {
               !isLoggedIn ? "disabled-button" : ""
             }`}
             disabled={!isLoggedIn}
+            onClick={handleCreateTest}
           >
             Save Test
           </button>
