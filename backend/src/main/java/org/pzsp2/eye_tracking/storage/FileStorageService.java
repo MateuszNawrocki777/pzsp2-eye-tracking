@@ -24,6 +24,7 @@ import java.net.MalformedURLException;
 import java.nio.file.*;
 import java.util.UUID;
 
+@SuppressWarnings("null")
 @Service
 public class FileStorageService {
 
@@ -211,11 +212,44 @@ public class FileStorageService {
             throw new ResponseStatusException(FORBIDDEN, "Access denied");
         }
 
-        study.setTitle(newSettings.getTitle());
-        study.setDescription(newSettings.getDescription());
+        if (newSettings.getTitle() != null) {
+            study.setTitle(newSettings.getTitle());
+        }
+        if (newSettings.getDescription() != null) {
+            study.setDescription(newSettings.getDescription());
+        }
+
+        TestCreateRequest mergedSettings = new TestCreateRequest();
+        try {
+            if (study.getSettings() != null && !study.getSettings().isBlank()) {
+                mergedSettings = objectMapper.readValue(study.getSettings(), TestCreateRequest.class);
+            }
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error occurred while reading settings", e);
+        }
+
+        if (newSettings.getDispGazeTracking() != null) {
+            mergedSettings.setDispGazeTracking(newSettings.getDispGazeTracking());
+        }
+        if (newSettings.getDispTimeLeft() != null) {
+            mergedSettings.setDispTimeLeft(newSettings.getDispTimeLeft());
+        }
+        if (newSettings.getTimePerImageMs() != null) {
+            mergedSettings.setTimePerImageMs(newSettings.getTimePerImageMs());
+        }
+        if (newSettings.getRandomizeOrder() != null) {
+            mergedSettings.setRandomizeOrder(newSettings.getRandomizeOrder());
+        }
+
+        if (newSettings.getTitle() != null) {
+            mergedSettings.setTitle(newSettings.getTitle());
+        }
+        if (newSettings.getDescription() != null) {
+            mergedSettings.setDescription(newSettings.getDescription());
+        }
 
         try {
-            study.setSettings(objectMapper.writeValueAsString(newSettings));
+            study.setSettings(objectMapper.writeValueAsString(mergedSettings));
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error occurred while saving settings", e);
         }
@@ -225,7 +259,7 @@ public class FileStorageService {
 
     @Transactional
     public void addFileToTestForResearcher(UUID testId, MultipartFile file, UUID researcherId) {
-        Study study = studyRepository.findById(testId)
+        Study study = studyRepository.findById(java.util.Objects.requireNonNull(testId))
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Test does not exist"));
 
         if (!researcherId.equals(study.getResearcherId())) {
@@ -239,7 +273,7 @@ public class FileStorageService {
 
     @Transactional
     public void deleteSingleFileForResearcher(UUID fileId, UUID researcherId) {
-        StudyMaterial material = materialRepository.findById(fileId)
+        StudyMaterial material = materialRepository.findById(java.util.Objects.requireNonNull(fileId))
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "File does not exist"));
 
         if (material.getStudy() == null || !researcherId.equals(material.getStudy().getResearcherId())) {

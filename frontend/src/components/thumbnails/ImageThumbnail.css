@@ -1,0 +1,8 @@
+.image-thumbnail {
+    width: 266px;
+    height: 196px;
+    object-fit: cover;
+    border-radius: 8px;
+    image-rendering: auto;
+    transform: translateZ(0);
+}
