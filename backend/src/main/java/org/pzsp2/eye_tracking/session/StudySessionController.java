@@ -1,6 +1,7 @@
 package org.pzsp2.eye_tracking.session;
 
 import org.pzsp2.eye_tracking.auth.AuthenticatedUser;
+import org.pzsp2.eye_tracking.session.dto.StudySessionAggregateHeatmapDto;
 import org.pzsp2.eye_tracking.session.dto.StudySessionCreateRequest;
 import org.pzsp2.eye_tracking.session.dto.StudySessionCreateResponse;
 import org.pzsp2.eye_tracking.session.dto.StudySessionDetailsDto;
@@ -65,5 +66,25 @@ public class StudySessionController {
         }
 
         return ResponseEntity.ok(sessionService.getSessionsForStudy(testId));
+    }
+
+    @GetMapping("/test/{testId}/heatmap")
+    public ResponseEntity<StudySessionAggregateHeatmapDto> getAggregateHeatmapForStudy(
+            @PathVariable UUID testId,
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+        if (authenticatedUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        var study = studyRepository.findById(Objects.requireNonNull(testId))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Study does not exist"));
+        if (!authenticatedUser.userId().equals(study.getResearcherId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+
+        StudySessionAggregateHeatmapDto dto = new StudySessionAggregateHeatmapDto();
+        dto.setStudyId(testId);
+        dto.setHeatmaps(sessionService.getAggregateHeatmapsForStudy(testId));
+        return ResponseEntity.ok(dto);
     }
 }

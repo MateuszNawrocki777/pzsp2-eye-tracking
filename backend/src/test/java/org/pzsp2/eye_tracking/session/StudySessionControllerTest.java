@@ -134,4 +134,74 @@ class StudySessionControllerTest {
         // total normalized sum should be 1.0
         assertEquals(1.0, sum, 1e-9);
     }
+
+    @Test
+    void getAggregateHeatmap_returnsCombinedHeatmapForResearcher() throws Exception {
+        Study study = new Study();
+        study.setTitle("AggregateStudy");
+        study.setSettings("{}");
+        study.setResearcherId(owner.getUserId());
+        study = studyRepository.save(study);
+
+        StudyMaterial m1 = new StudyMaterial();
+        m1.setStudy(study);
+        m1.setFileName("a.png");
+        m1.setFilePath("a.png");
+        m1.setDisplayOrder(1);
+        m1.setContentType("image/png");
+
+        StudyMaterial m2 = new StudyMaterial();
+        m2.setStudy(study);
+        m2.setFileName("b.png");
+        m2.setFilePath("b.png");
+        m2.setDisplayOrder(2);
+        m2.setContentType("image/png");
+
+        materialRepository.saveAll(List.of(m1, m2));
+
+        Map<String, Object> payload1 = Map.of(
+                "study_id", study.getStudyId(),
+                "name", "session-1",
+                "points_per_image", List.of(
+                        List.of(
+                                List.of(0.5, 0.5),
+                                List.of(0.5, 0.5)),
+                        List.of(
+                                List.of(1.0, 1.0))));
+
+        Map<String, Object> payload2 = Map.of(
+                "study_id", study.getStudyId(),
+                "name", "session-2",
+                "points_per_image", List.of(
+                        List.of(
+                                List.of(0.0, 0.0)),
+                        List.of(
+                                List.of(1.0, 1.0))));
+
+        mockMvc.perform(post("/api/sessions")
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                .content(Objects.requireNonNull(objectMapper.writeValueAsString(payload1))))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/sessions")
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
+                .content(Objects.requireNonNull(objectMapper.writeValueAsString(payload2))))
+                .andExpect(status().isOk());
+
+        MvcResult getRes = mockMvc.perform(get("/api/sessions/test/" + study.getStudyId() + "/heatmap")
+                .header("Authorization", bearer(owner)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        JsonNode details = objectMapper.readTree(getRes.getResponse().getContentAsString());
+        JsonNode heatmaps = details.get("heatmaps");
+        assertEquals(2, heatmaps.size());
+
+        JsonNode image1 = heatmaps.get(0);
+        double sum = 0.0;
+        for (JsonNode p : image1) {
+            sum += p.get("val").asDouble();
+        }
+        assertEquals(1.0, sum, 1e-9);
+    }
 }

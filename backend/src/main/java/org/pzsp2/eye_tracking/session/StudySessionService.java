@@ -67,7 +67,11 @@ public class StudySessionService {
             throw new RuntimeException("Failed to serialize heatmaps", e);
         }
 
-        return sessionRepository.save(session).getSessionId();
+        StudySession saved = sessionRepository.save(session);
+        updateAggregateHeatmaps(study, heatmaps, imageCount);
+        studyRepository.save(study);
+
+        return saved.getSessionId();
     }
 
     @Transactional(readOnly = true)
@@ -85,11 +89,7 @@ public class StudySessionService {
 
         if (session.getHeatmapsJson() != null) {
             try {
-                List<List<HeatmapPointDto>> heatmaps = objectMapper.readValue(
-                        session.getHeatmapsJson(),
-                        new TypeReference<List<List<HeatmapPointDto>>>() {
-                        });
-                dto.setHeatmaps(heatmaps);
+                dto.setHeatmaps(parseHeatmaps(session.getHeatmapsJson()));
             } catch (JsonProcessingException e) {
                 throw new RuntimeException("Failed to parse heatmaps", e);
             }
@@ -116,6 +116,145 @@ public class StudySessionService {
             result.add(dto);
         }
         return result;
+    }
+
+    @Transactional(readOnly = true)
+    @SuppressWarnings("null")
+    public List<List<HeatmapPointDto>> getAggregateHeatmapsForStudy(UUID studyId) {
+        Study study = studyRepository.findById(Objects.requireNonNull(studyId))
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Study does not exist"));
+
+        int imageCount = materialRepository.findAllByStudyOrderByDisplayOrderAsc(study).size();
+        if (study.getAggregateHeatmapsJson() == null) {
+            return emptyHeatmaps(imageCount);
+        }
+
+        try {
+            List<List<HeatmapPointDto>> sums = parseHeatmaps(study.getAggregateHeatmapsJson());
+            if (sums.size() < imageCount) {
+                sums.addAll(emptyHeatmaps(imageCount - sums.size()));
+            }
+            return normalizeHeatmaps(sums, imageCount);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to parse aggregate heatmaps", e);
+        }
+    }
+
+    private List<List<HeatmapPointDto>> parseHeatmaps(String json) throws JsonProcessingException {
+        return objectMapper.readValue(json, new TypeReference<List<List<HeatmapPointDto>>>() {
+        });
+    }
+
+    private void updateAggregateHeatmaps(Study study, List<List<HeatmapPointDto>> sessionHeatmaps,
+            int imageCount) {
+        double[][][] aggregateGrid = new double[imageCount][GRID_HEIGHT][GRID_WIDTH];
+
+        if (study.getAggregateHeatmapsJson() != null) {
+            try {
+                List<List<HeatmapPointDto>> existing = parseHeatmaps(study.getAggregateHeatmapsJson());
+                applyHeatmapToGrid(aggregateGrid, existing, imageCount, 1);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("Failed to parse aggregate heatmaps", e);
+            }
+        }
+
+        applyHeatmapToGrid(aggregateGrid, sessionHeatmaps, imageCount, 1);
+
+        List<List<HeatmapPointDto>> aggregated = buildHeatmapsFromGridRaw(aggregateGrid, imageCount);
+        try {
+            study.setAggregateHeatmapsJson(objectMapper.writeValueAsString(aggregated));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize aggregate heatmaps", e);
+        }
+    }
+
+    private void applyHeatmapToGrid(double[][][] grid, List<List<HeatmapPointDto>> heatmaps,
+            int imageCount, int weight) {
+        if (heatmaps == null) {
+            return;
+        }
+        int limit = Math.min(imageCount, heatmaps.size());
+        for (int i = 0; i < limit; i++) {
+            List<HeatmapPointDto> heatmap = heatmaps.get(i);
+            if (heatmap == null) {
+                continue;
+            }
+            for (HeatmapPointDto point : heatmap) {
+                if (point == null) {
+                    continue;
+                }
+                int x = point.getX();
+                int y = point.getY();
+                if (x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT) {
+                    continue;
+                }
+                double val = point.getVal();
+                if (val <= 0.0) {
+                    continue;
+                }
+                grid[i][y][x] += val * weight;
+            }
+        }
+    }
+
+    private List<List<HeatmapPointDto>> buildHeatmapsFromGridRaw(double[][][] grid, int imageCount) {
+        List<List<HeatmapPointDto>> aggregated = new ArrayList<>();
+        for (int i = 0; i < imageCount; i++) {
+            List<HeatmapPointDto> heatmap = new ArrayList<>();
+            for (int y = 0; y < GRID_HEIGHT; y++) {
+                for (int x = 0; x < GRID_WIDTH; x++) {
+                    double val = grid[i][y][x];
+                    if (val > 0.0) {
+                        heatmap.add(new HeatmapPointDto(x, y, val));
+                    }
+                }
+            }
+            aggregated.add(heatmap);
+        }
+        return aggregated;
+    }
+
+    private List<List<HeatmapPointDto>> normalizeHeatmaps(List<List<HeatmapPointDto>> sums, int imageCount) {
+        List<List<HeatmapPointDto>> normalized = new ArrayList<>();
+        int limit = Math.min(imageCount, sums.size());
+        for (int i = 0; i < limit; i++) {
+            List<HeatmapPointDto> heatmap = sums.get(i);
+            if (heatmap == null || heatmap.isEmpty()) {
+                normalized.add(new ArrayList<>());
+                continue;
+            }
+            double total = 0.0;
+            for (HeatmapPointDto point : heatmap) {
+                if (point != null) {
+                    total += point.getVal();
+                }
+            }
+            List<HeatmapPointDto> norm = new ArrayList<>();
+            if (total > 0.0) {
+                for (HeatmapPointDto point : heatmap) {
+                    if (point == null) {
+                        continue;
+                    }
+                    double val = point.getVal();
+                    if (val > 0.0) {
+                        norm.add(new HeatmapPointDto(point.getX(), point.getY(), val / total));
+                    }
+                }
+            }
+            normalized.add(norm);
+        }
+        if (imageCount > limit) {
+            normalized.addAll(emptyHeatmaps(imageCount - limit));
+        }
+        return normalized;
+    }
+
+    private List<List<HeatmapPointDto>> emptyHeatmaps(int imageCount) {
+        List<List<HeatmapPointDto>> heatmaps = new ArrayList<>();
+        for (int i = 0; i < imageCount; i++) {
+            heatmaps.add(new ArrayList<>());
+        }
+        return heatmaps;
     }
 
     private List<List<HeatmapPointDto>> buildHeatmaps(List<List<List<Double>>> pointsPerImage) {

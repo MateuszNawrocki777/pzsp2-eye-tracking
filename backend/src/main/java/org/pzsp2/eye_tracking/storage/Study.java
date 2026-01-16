@@ -28,15 +28,59 @@ public class Study {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
-    public UUID getStudyId() { return studyId; }
-    public void setStudyId(UUID studyId) { this.studyId = studyId; }
-    public UUID getResearcherId() { return researcherId; }
-    public void setResearcherId(UUID researcherId) { this.researcherId = researcherId; }
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public String getSettings() { return settings; }
-    public void setSettings(String settings) { this.settings = settings; }
-    public void setIsActive(Boolean active) { isActive = active; }
+    @Lob
+    @Column(name = "aggregate_heatmaps_json", columnDefinition = "TEXT")
+    private String aggregateHeatmapsJson;
+
+    public UUID getStudyId() {
+        return studyId;
+    }
+
+    public void setStudyId(UUID studyId) {
+        this.studyId = studyId;
+    }
+
+    public UUID getResearcherId() {
+        return researcherId;
+    }
+
+    public void setResearcherId(UUID researcherId) {
+        this.researcherId = researcherId;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getSettings() {
+        return settings;
+    }
+
+    public void setSettings(String settings) {
+        this.settings = settings;
+    }
+
+    public void setIsActive(Boolean active) {
+        isActive = active;
+    }
+
+    public String getAggregateHeatmapsJson() {
+        return aggregateHeatmapsJson;
+    }
+
+    public void setAggregateHeatmapsJson(String aggregateHeatmapsJson) {
+        this.aggregateHeatmapsJson = aggregateHeatmapsJson;
+    }
 }
