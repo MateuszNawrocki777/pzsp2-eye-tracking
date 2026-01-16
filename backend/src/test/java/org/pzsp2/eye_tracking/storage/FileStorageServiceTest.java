@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.pzsp2.eye_tracking.storage.dto.TestCreateRequest;
+import org.pzsp2.eye_tracking.share.StudyShareLinkService;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -34,6 +34,9 @@ class FileStorageServiceTest {
     @Mock
     private StudyMaterialRepository materialRepository;
 
+    @Mock
+    private StudyShareLinkService shareLinkService;
+
     private FileStorageService service;
 
     private Path tempDir;
@@ -41,7 +44,7 @@ class FileStorageServiceTest {
     @BeforeEach
     void setUp() throws Exception {
         tempDir = Files.createTempDirectory("test-uploads");
-        service = new FileStorageService(tempDir.toString(), materialRepository, studyRepository);
+        service = new FileStorageService(tempDir.toString(), materialRepository, studyRepository, shareLinkService);
         MockHttpServletRequest request = new MockHttpServletRequest();
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
     }
@@ -108,6 +111,7 @@ class FileStorageServiceTest {
         service.deleteTestForResearcher(testId, owner);
 
         verify(materialRepository).deleteAll(materials);
+        verify(shareLinkService).deleteLinksForStudy(study);
         verify(studyRepository).delete(study);
     }
 
