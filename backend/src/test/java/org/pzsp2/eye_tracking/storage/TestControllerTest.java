@@ -8,6 +8,7 @@ import org.pzsp2.eye_tracking.user.UserAccount;
 import org.pzsp2.eye_tracking.user.UserAccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.pzsp2.eye_tracking.user.UserRole;
+import org.pzsp2.eye_tracking.session.StudySessionRepository;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -47,12 +48,16 @@ class TestControllerTest {
     @Autowired
     private StudyMaterialRepository materialRepository;
 
+    @Autowired
+    private StudySessionRepository sessionRepository;
+
     private UserAccount owner;
     private UserAccount other;
 
     @BeforeEach
     void setUp() {
         materialRepository.deleteAll();
+        sessionRepository.deleteAll();
         studyRepository.deleteAll();
         userAccountRepository.deleteAll();
 
