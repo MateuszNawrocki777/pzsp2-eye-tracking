@@ -12,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.UUID;
 
@@ -34,6 +35,9 @@ class TestControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired
     private UserAccountRepository userAccountRepository;
@@ -94,10 +98,15 @@ class TestControllerTest {
     @Test
     void createTest_withFiles_createsStudyAndReturnsId() throws Exception {
         MockMultipartFile file = new MockMultipartFile("files", "a.txt", "text/plain", "hello".getBytes());
+        MockMultipartFile settings = new MockMultipartFile(
+                "settings",
+                "settings",
+                "application/json",
+                objectMapper.writeValueAsBytes(java.util.Map.of(
+                        "title", "CreatedTest",
+                        "description", "desc")));
 
-        MvcResult res = mockMvc.perform(multipart("/api/tests").file(file)
-                .param("title", "CreatedTest")
-                .param("description", "desc")
+        MvcResult res = mockMvc.perform(multipart("/api/tests").file(file).file(settings)
                 .header("Authorization", bearer(owner)))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -113,10 +122,15 @@ class TestControllerTest {
         MockMultipartFile f1 = new MockMultipartFile("files", "a1.png", "image/png", "a".getBytes());
         MockMultipartFile f2 = new MockMultipartFile("files", "a2.png", "image/png", "b".getBytes());
         MockMultipartFile f3 = new MockMultipartFile("files", "a3.png", "image/png", "c".getBytes());
+        MockMultipartFile settings = new MockMultipartFile(
+                "settings",
+                "settings",
+                "application/json",
+                objectMapper.writeValueAsBytes(java.util.Map.of(
+                        "title", "MultiTest",
+                        "description", "desc")));
 
-        MvcResult res = mockMvc.perform(multipart("/api/tests").file(f1).file(f2).file(f3)
-                .param("title", "MultiTest")
-                .param("description", "desc")
+        MvcResult res = mockMvc.perform(multipart("/api/tests").file(f1).file(f2).file(f3).file(settings)
                 .header("Authorization", bearer(owner)))
                 .andExpect(status().isOk())
                 .andReturn();

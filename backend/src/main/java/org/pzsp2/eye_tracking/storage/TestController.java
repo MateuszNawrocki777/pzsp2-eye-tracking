@@ -12,6 +12,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.pzsp2.eye_tracking.auth.AuthenticatedUser;
 import org.springframework.web.multipart.MultipartFile;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.springframework.web.server.ResponseStatusException;
+import io.swagger.v3.oas.annotations.Parameter;
+import org.springdoc.core.annotations.ParameterObject;
 
 import java.util.List;
 
@@ -22,6 +27,7 @@ import java.util.UUID;
 public class TestController {
 
     private final FileStorageService fileStorageService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public TestController(FileStorageService fileStorageService) {
         this.fileStorageService = fileStorageService;
@@ -30,14 +36,24 @@ public class TestController {
     @PostMapping(consumes = { "multipart/form-data" })
     public ResponseEntity<UUID> createTest(
             @RequestPart("files") MultipartFile[] files,
-            @ModelAttribute TestCreateRequest settings,
+            @ParameterObject @ModelAttribute TestCreateRequest settings,
+            @Parameter(hidden = true) @RequestPart(value = "settings", required = false) String settingsJson,
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
 
         if (authenticatedUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        UUID newTestId = fileStorageService.createFullTest(settings, files, authenticatedUser.userId());
+        TestCreateRequest finalSettings = settings;
+        if (settingsJson != null && !settingsJson.isBlank()) {
+            try {
+                finalSettings = objectMapper.readValue(settingsJson, TestCreateRequest.class);
+            } catch (JsonProcessingException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid settings JSON", e);
+            }
+        }
+
+        UUID newTestId = fileStorageService.createFullTest(finalSettings, files, authenticatedUser.userId());
         return ResponseEntity.ok(newTestId);
     }
 
@@ -48,7 +64,7 @@ public class TestController {
         String fileName = fileStorageService.getOriginalName(fileId);
 
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
+                .contentType(MediaType.parseMediaType(java.util.Objects.requireNonNull(contentType)))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"")
                 .body(resource);
     }
