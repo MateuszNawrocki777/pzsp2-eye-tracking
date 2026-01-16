@@ -6,6 +6,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.pzsp2.eye_tracking.auth.jwt.JwtService;
 import org.pzsp2.eye_tracking.storage.Study;
+import org.pzsp2.eye_tracking.storage.StudyMaterial;
+import org.pzsp2.eye_tracking.storage.StudyMaterialRepository;
 import org.pzsp2.eye_tracking.storage.StudyRepository;
 import org.pzsp2.eye_tracking.user.UserAccount;
 import org.pzsp2.eye_tracking.user.UserAccountRepository;
@@ -27,6 +29,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@SuppressWarnings("null")
 @SpringBootTest
 @AutoConfigureMockMvc
 class StudySessionControllerTest {
@@ -44,6 +47,9 @@ class StudySessionControllerTest {
     private StudySessionRepository sessionRepository;
 
     @Autowired
+    private StudyMaterialRepository materialRepository;
+
+    @Autowired
     private UserAccountRepository userAccountRepository;
 
     @Autowired
@@ -54,6 +60,7 @@ class StudySessionControllerTest {
     @BeforeEach
     void setUp() {
         sessionRepository.deleteAll();
+        materialRepository.deleteAll();
         studyRepository.deleteAll();
         userAccountRepository.deleteAll();
 
@@ -72,6 +79,22 @@ class StudySessionControllerTest {
         study.setSettings("{}");
         study.setResearcherId(owner.getUserId());
         study = studyRepository.save(study);
+
+        StudyMaterial m1 = new StudyMaterial();
+        m1.setStudy(study);
+        m1.setFileName("a.png");
+        m1.setFilePath("a.png");
+        m1.setDisplayOrder(1);
+        m1.setContentType("image/png");
+
+        StudyMaterial m2 = new StudyMaterial();
+        m2.setStudy(study);
+        m2.setFileName("b.png");
+        m2.setFilePath("b.png");
+        m2.setDisplayOrder(2);
+        m2.setContentType("image/png");
+
+        materialRepository.saveAll(List.of(m1, m2));
 
         Map<String, Object> payload = Map.of(
                 "study_id", study.getStudyId(),

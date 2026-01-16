@@ -7,6 +7,7 @@ import org.pzsp2.eye_tracking.session.dto.HeatmapPointDto;
 import org.pzsp2.eye_tracking.session.dto.StudySessionCreateRequest;
 import org.pzsp2.eye_tracking.session.dto.StudySessionDetailsDto;
 import org.pzsp2.eye_tracking.storage.Study;
+import org.pzsp2.eye_tracking.storage.StudyMaterialRepository;
 import org.pzsp2.eye_tracking.storage.StudyRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,7 @@ import java.util.UUID;
 import java.time.LocalDateTime;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @Service
 public class StudySessionService {
@@ -28,12 +30,15 @@ public class StudySessionService {
 
     private final StudySessionRepository sessionRepository;
     private final StudyRepository studyRepository;
+    private final StudyMaterialRepository materialRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public StudySessionService(StudySessionRepository sessionRepository,
-            StudyRepository studyRepository) {
+            StudyRepository studyRepository,
+            StudyMaterialRepository materialRepository) {
         this.sessionRepository = sessionRepository;
         this.studyRepository = studyRepository;
+        this.materialRepository = materialRepository;
     }
 
     @Transactional
@@ -41,6 +46,13 @@ public class StudySessionService {
     public UUID createSession(StudySessionCreateRequest request) {
         Study study = studyRepository.findById(Objects.requireNonNull(request.getStudyId()))
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Study does not exist"));
+
+        int imageCount = materialRepository.findAllByStudyOrderByDisplayOrderAsc(study).size();
+        int providedCount = request.getPointsPerImage() == null ? 0 : request.getPointsPerImage().size();
+        if (providedCount != imageCount) {
+            throw new ResponseStatusException(BAD_REQUEST,
+                    "points_per_image size must match number of study images");
+        }
 
         List<List<HeatmapPointDto>> heatmaps = buildHeatmaps(request.getPointsPerImage());
 
