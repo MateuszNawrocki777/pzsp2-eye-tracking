@@ -2,7 +2,9 @@ package org.pzsp2.eye_tracking.share.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
+import lombok.Data;
 
+@Data
 public class StudyShareLinkResponse {
 
     @JsonProperty("access_link")
@@ -23,51 +25,4 @@ public class StudyShareLinkResponse {
     @JsonProperty("access_url")
     private String accessUrl;
 
-    public String getAccessLink() {
-        return accessLink;
-    }
-
-    public void setAccessLink(String accessLink) {
-        this.accessLink = accessLink;
-    }
-
-    public Integer getMaxUses() {
-        return maxUses;
-    }
-
-    public void setMaxUses(Integer maxUses) {
-        this.maxUses = maxUses;
-    }
-
-    public LocalDateTime getExpiresAt() {
-        return expiresAt;
-    }
-
-    public void setExpiresAt(LocalDateTime expiresAt) {
-        this.expiresAt = expiresAt;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Integer getUseCounter() {
-        return useCounter;
-    }
-
-    public void setUseCounter(Integer useCounter) {
-        this.useCounter = useCounter;
-    }
-
-    public String getAccessUrl() {
-        return accessUrl;
-    }
-
-    public void setAccessUrl(String accessUrl) {
-        this.accessUrl = accessUrl;
-    }
 }

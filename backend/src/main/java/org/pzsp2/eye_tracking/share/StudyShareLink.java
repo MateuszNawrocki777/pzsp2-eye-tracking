@@ -2,7 +2,11 @@ package org.pzsp2.eye_tracking.share;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@NoArgsConstructor
 @Entity
 @Table(name = "study_share_links")
 public class StudyShareLink {
@@ -27,51 +31,4 @@ public class StudyShareLink {
     @Column(name = "use_counter", nullable = false)
     private Integer useCounter = 0;
 
-    public String getAccessLink() {
-        return accessLink;
-    }
-
-    public void setAccessLink(String accessLink) {
-        this.accessLink = accessLink;
-    }
-
-    public org.pzsp2.eye_tracking.storage.Study getStudy() {
-        return study;
-    }
-
-    public void setStudy(org.pzsp2.eye_tracking.storage.Study study) {
-        this.study = study;
-    }
-
-    public Integer getMaxUses() {
-        return maxUses;
-    }
-
-    public void setMaxUses(Integer maxUses) {
-        this.maxUses = maxUses;
-    }
-
-    public LocalDateTime getExpiresAt() {
-        return expiresAt;
-    }
-
-    public void setExpiresAt(LocalDateTime expiresAt) {
-        this.expiresAt = expiresAt;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Integer getUseCounter() {
-        return useCounter;
-    }
-
-    public void setUseCounter(Integer useCounter) {
-        this.useCounter = useCounter;
-    }
 }
