@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.springframework.test.web.servlet.MvcResult;
-// removed unused hamcrest import
+import org.pzsp2.eye_tracking.share.StudyShareLinkRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -51,12 +51,16 @@ class TestControllerTest {
     @Autowired
     private StudyMaterialRepository materialRepository;
 
+    @Autowired
+    private StudyShareLinkRepository shareLinkRepository;
+
     private UserAccount owner;
     private UserAccount other;
 
     @BeforeEach
     void setUp() {
         materialRepository.deleteAll();
+        shareLinkRepository.deleteAll();
         studyRepository.deleteAll();
         userAccountRepository.deleteAll();
 
