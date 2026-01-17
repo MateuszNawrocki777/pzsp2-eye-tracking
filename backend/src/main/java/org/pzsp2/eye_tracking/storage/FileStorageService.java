@@ -270,36 +270,4 @@ public class FileStorageService {
 
         studyRepository.save(study);
     }
-
-    @Transactional
-    public void addFileToTestForResearcher(UUID testId, MultipartFile file, UUID researcherId) {
-        Study study = studyRepository.findById(java.util.Objects.requireNonNull(testId))
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Test does not exist"));
-
-        if (!researcherId.equals(study.getResearcherId())) {
-            throw new ResponseStatusException(FORBIDDEN, "Access denied");
-        }
-
-        int currentCount = materialRepository.findAllByStudyOrderByDisplayOrderAsc(study).size();
-
-        storeSingleFile(file, study, currentCount + 1);
-    }
-
-    @Transactional
-    public void deleteSingleFileForResearcher(UUID fileId, UUID researcherId) {
-        StudyMaterial material = materialRepository.findById(java.util.Objects.requireNonNull(fileId))
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "File does not exist"));
-
-        if (material.getStudy() == null || !researcherId.equals(material.getStudy().getResearcherId())) {
-            throw new ResponseStatusException(FORBIDDEN, "Access denied");
-        }
-
-        try {
-            Path path = this.fileStorageLocation.resolve(material.getFilePath());
-            Files.deleteIfExists(path);
-        } catch (IOException e) {
-        }
-
-        materialRepository.delete(material);
-    }
 }

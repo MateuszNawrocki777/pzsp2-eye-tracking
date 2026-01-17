@@ -131,44 +131,6 @@ class FileStorageServiceTest {
     }
 
     @Test
-    void deleteSingleFileForResearcher_allowsOwner() {
-        UUID fileId = UUID.randomUUID();
-        UUID owner = UUID.randomUUID();
-
-        Study study = new Study();
-        study.setResearcherId(owner);
-
-        StudyMaterial material = new StudyMaterial();
-        material.setMaterialId(fileId);
-        material.setStudy(study);
-        material.setFilePath("nonexistent-file");
-
-        given(materialRepository.findById(fileId)).willReturn(Optional.of(material));
-
-        service.deleteSingleFileForResearcher(fileId, owner);
-
-        verify(materialRepository).delete(material);
-    }
-
-    @Test
-    void deleteSingleFileForResearcher_deniesNonOwner() {
-        UUID fileId = UUID.randomUUID();
-        UUID owner = UUID.randomUUID();
-        UUID other = UUID.randomUUID();
-
-        Study study = new Study();
-        study.setResearcherId(owner);
-
-        StudyMaterial material = new StudyMaterial();
-        material.setMaterialId(fileId);
-        material.setStudy(study);
-
-        given(materialRepository.findById(fileId)).willReturn(Optional.of(material));
-
-        assertThrows(ResponseStatusException.class, () -> service.deleteSingleFileForResearcher(fileId, other));
-    }
-
-    @Test
     void getTestDetailsForResearcher_deniesNonOwner() throws Exception {
         UUID testId = UUID.randomUUID();
         UUID owner = UUID.randomUUID();
@@ -253,31 +215,6 @@ class FileStorageServiceTest {
 
         long fileCount = Files.list(tempDir).count();
         assertTrue(fileCount > 0);
-    }
-
-    @Test
-    void addFileToTest_savesFile() throws Exception {
-        UUID testId = UUID.randomUUID();
-        UUID owner = UUID.randomUUID();
-
-        Study study = new Study();
-        study.setStudyId(testId);
-        study.setResearcherId(owner);
-
-        given(studyRepository.findById(testId)).willReturn(Optional.of(study));
-
-        given(materialRepository.save(any(StudyMaterial.class))).willAnswer(inv -> {
-            StudyMaterial m = inv.getArgument(0);
-            m.setMaterialId(UUID.randomUUID());
-            return m;
-        });
-
-        MockMultipartFile f = new MockMultipartFile("file", "b.png", "image/png", "x".getBytes());
-
-        service.addFileToTestForResearcher(testId, f, owner);
-
-        verify(materialRepository).save(any(StudyMaterial.class));
-        assertTrue(Files.list(tempDir).count() > 0);
     }
 
     @Test

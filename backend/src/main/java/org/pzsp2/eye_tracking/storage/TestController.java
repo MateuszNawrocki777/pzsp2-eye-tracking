@@ -113,27 +113,4 @@ public class TestController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/{testId}/files")
-    public ResponseEntity<Void> addFileToTest(
-            @PathVariable UUID testId,
-            @RequestParam("file") MultipartFile file,
-            @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
-        if (authenticatedUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        fileStorageService.addFileToTestForResearcher(testId, file, authenticatedUser.userId());
-        return ResponseEntity.ok().build();
-    }
-
-    @DeleteMapping("/files/{fileId}")
-    public ResponseEntity<Void> deleteFile(@PathVariable UUID fileId,
-            @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
-        if (authenticatedUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        fileStorageService.deleteSingleFileForResearcher(fileId, authenticatedUser.userId());
-        return ResponseEntity.noContent().build();
-    }
 }

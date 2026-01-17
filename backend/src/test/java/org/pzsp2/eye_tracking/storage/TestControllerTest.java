@@ -151,28 +151,6 @@ class TestControllerTest {
     }
 
     @Test
-    void addFileToTest_owner_canAddAndDeleteFile() throws Exception {
-        Study study = new Study();
-        study.setTitle("FileAdd");
-        study.setResearcherId(owner.getUserId());
-        study = studyRepository.save(study);
-
-        MockMultipartFile file = new MockMultipartFile("file", "img.png", "image/png", "data".getBytes());
-
-        mockMvc.perform(multipart("/api/tests/" + study.getStudyId() + "/files").file(file)
-                .header("Authorization", bearer(owner)))
-                .andExpect(status().isOk());
-
-        // at least one material should be linked
-        assertFalse(materialRepository.findAll().isEmpty());
-
-        // delete the file as owner
-        UUID fileId = materialRepository.findAll().get(0).getMaterialId();
-        mockMvc.perform(delete("/api/tests/files/" + fileId).header("Authorization", bearer(owner)))
-                .andExpect(status().isNoContent());
-    }
-
-    @Test
     void updateTest_owner_canUpdate() throws Exception {
         Study study = new Study();
         study.setTitle("ToUpdate");
