@@ -1,5 +1,6 @@
 package org.pzsp2.eye_tracking.session.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -20,9 +21,7 @@ public class StudySessionDetailsDto {
     @JsonProperty("completed_at")
     private LocalDateTime completedAt;
 
-    @JsonProperty("created_at")
-    private LocalDateTime createdAt;
-
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonProperty("heatmaps")
     private List<List<HeatmapPointDto>> heatmaps;
 

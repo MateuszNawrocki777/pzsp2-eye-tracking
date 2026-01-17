@@ -25,10 +25,7 @@ public class StudySession {
     private String name;
 
     @Column(name = "completed_at")
-    private LocalDateTime completedAt;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime completedAt = LocalDateTime.now();
 
     @Lob
     @Column(name = "heatmaps_json", columnDefinition = "TEXT")

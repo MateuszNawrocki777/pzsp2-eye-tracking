@@ -85,7 +85,6 @@ public class StudySessionService {
         dto.setStudyId(session.getStudy().getStudyId());
         dto.setName(session.getName());
         dto.setCompletedAt(session.getCompletedAt());
-        dto.setCreatedAt(session.getCreatedAt());
 
         if (session.getHeatmapsJson() != null) {
             try {
@@ -112,7 +111,6 @@ public class StudySessionService {
             dto.setStudyId(studyId);
             dto.setName(session.getName());
             dto.setCompletedAt(session.getCompletedAt());
-            dto.setCreatedAt(session.getCreatedAt());
             result.add(dto);
         }
         return result;
