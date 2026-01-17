@@ -1,36 +1,37 @@
-version: '3.9'
+version: "3.9"
 
 services:
-  postgres:
-    image: postgres:16
-    container_name: eye_tracking_postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin123
-      POSTGRES_DB: eye_tracking_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    restart: always
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-  backend:
-    container_name: eye_tracking_backend
-    build: . 
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/eye_tracking_db
-      - FILE_UPLOAD_DIR=/app/uploads
-    volumes:
-      - ./uploads_data:/app/uploads
-    depends_on:
-      postgres:
-        condition: service_healthy
+    postgres:
+        image: postgres:16
+        container_name: eye_tracking_postgres
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: admin123
+            POSTGRES_DB: eye_tracking_db
+        ports:
+            - "5432:5432"
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+        restart: always
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+    backend:
+        container_name: eye_tracking_backend
+        build: .
+        ports:
+            - "8080:8080"
+        environment:
+            - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/eye_tracking_db
+            - FILE_UPLOAD_DIR=/app/uploads
+            - TZ=Europe/Warsaw
+        volumes:
+            - ./uploads_data:/app/uploads
+        depends_on:
+            postgres:
+                condition: service_healthy
 
 volumes:
-  pgdata:
+    pgdata:
