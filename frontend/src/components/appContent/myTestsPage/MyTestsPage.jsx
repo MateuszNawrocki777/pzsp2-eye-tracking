@@ -5,7 +5,7 @@ import "./MyTestsPage.css";
 
 export default function MyTestsPage() {
   const [tests, setTests] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // useEffect(() => {
@@ -26,15 +26,15 @@ export default function MyTestsPage() {
 
   function MyTestsContent() {
     if (loading) {
-      return <p>Loading tests...</p>;
+      return <p className="my-tests-message">Loading tests...</p>;
     }
 
     if (error) {
-      return <p>Error loading tests: {error.message}</p>;
+      return <p className="my-tests-message">Error loading tests: {error.message}</p>;
     }
 
     if (tests.length === 0) {
-      return <p>No tests yet</p>;
+      return <p className="my-tests-message">No tests yet. <br /> Click "New Test" to create a test.</p>;
     }
 
     return (
@@ -51,9 +51,10 @@ export default function MyTestsPage() {
 
   return (
     <div className="my-tests-container">
-      <div></div>
-      <h1>My Tests</h1>
-      <MyTestsContent />
+      <div className="my-tests-content-container">
+        <h1>My Tests</h1>
+        <MyTestsContent />
+      </div>
     </div>
   );
 }
