@@ -20,7 +20,6 @@ export default function AppContent() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/about" element={<div>About page</div>} />
         <Route path="/newTest" element={<NewTestPage />} />
         <Route path="/myTests" element={<MyTestsPage />} />
         <Route path="/admin" element={<AdminPage />} />
