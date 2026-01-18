@@ -8,6 +8,7 @@ import org.pzsp2.eye_tracking.auth.jwt.JwtService;
 import org.pzsp2.eye_tracking.storage.Study;
 import org.pzsp2.eye_tracking.storage.StudyMaterialRepository;
 import org.pzsp2.eye_tracking.storage.StudyRepository;
+import org.pzsp2.eye_tracking.session.StudySessionRepository;
 import org.pzsp2.eye_tracking.user.UserAccount;
 import org.pzsp2.eye_tracking.user.UserAccountRepository;
 import org.pzsp2.eye_tracking.user.UserRole;
@@ -50,12 +51,16 @@ class StudyShareLinkControllerTest {
     @Autowired
     private StudyShareLinkRepository shareLinkRepository;
 
+    @Autowired
+    private StudySessionRepository sessionRepository;
+
     private UserAccount owner;
 
     @BeforeEach
     void setUp() {
         materialRepository.deleteAll();
         shareLinkRepository.deleteAll();
+        sessionRepository.deleteAll();
         studyRepository.deleteAll();
         userAccountRepository.deleteAll();
 

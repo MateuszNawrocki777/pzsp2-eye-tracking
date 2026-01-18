@@ -1,0 +1,20 @@
+package org.pzsp2.eye_tracking.session.dto;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+import java.util.List;
+import java.util.UUID;
+
+@Data
+public class StudySessionCreateRequest {
+
+    @JsonProperty("study_id")
+    private UUID studyId;
+
+    @JsonProperty("name")
+    private String name;
+
+    @JsonProperty("points_per_image")
+    private List<List<List<Double>>> pointsPerImage;
+
+}
