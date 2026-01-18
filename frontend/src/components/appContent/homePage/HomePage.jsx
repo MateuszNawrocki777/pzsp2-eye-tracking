@@ -17,10 +17,10 @@ export default function HomePage() {
           <div className="home-for-who-section">
             <h1>Who is this platform for?</h1>
             <div className="home-audience-tiles-container">
-              <div className="audience-tile-researcher">Researchers</div>
-              <div className="audience-tile-psychologist">Psychologists</div>
-              <div className="audience-tile-marketing">UX / Marketing</div>
-              <div className="audience-tile-you">You</div>
+              <div className="home-audience-tile">Researchers</div>
+              <div className="home-audience-tile">Psychologists</div>
+              <div className="home-audience-tile">UX / Marketing</div>
+              <div className="home-audience-tile">You</div>
             </div>
           </div>
           <div className="home-instructions-section">
