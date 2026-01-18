@@ -13,153 +13,47 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  justify-content: space-between;
   gap: 20px;
   background-color: #353941;
   border-radius: 8px;
-  padding: 20px;
-  overflow-y: auto;
-  position: relative;
+  padding: 40px;
+  overflow-y: hidden;
 }
 
-/* .home-content-container h1 {
+.home-content-container h1 {
   text-align: center;
   margin-bottom: 32px;
 }
 
-.home-images-container {
+.home-content-container h2,
+.home-content-container h3 {
+  text-align: center;
+}
+
+.home-split-section {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  justify-content: space-between;
   gap: 20px;
-  padding: 20px;
-  overflow-x: auto;
-  background-color: #26282b;
-  border-radius: 8px;
 }
 
-.home-add-image-thumbnail {
-  cursor: pointer;
-}
-
-.home-add-image-text {
-  font-weight: normal;
-  cursor: auto;
-}
-
-.home-add-image-text:hover {
-  border: 1px solid transparent;
-}
-
-.home-preview-image-button {
-  top: 5px;
-  left: 5px;
-}
-
-.home-remove-image-button {
-  top: 5px;
-  right: 5px;
-}
-
-.home-remove-image-button:hover {
-  border-color: #ff4a4a;
-}
-
-.home-control-container {
+.home-audience-tiles-container {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: space-around;
+  gap: 20px;
 }
 
-.home-control-panel {
-  background-color: #26282b;
-  border-radius: 8px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 20%;
-}
-
-.home-control-panel h2 {
-  margin: 0;
-  text-align: center;
-}
-
-.home-control-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  user-select: none;
-}
-
-.home-time-input {
-  width: 2.5rem;
-}
-
-.home-reset-button {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background-color: #26282b;
-}
-
-.home-reset-button:hover {
-  border-color: #ff4a4a;
-}
-
-.home-reset-popup-message-content {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  margin: 10px 20px;
-}
-
-.home-reset-popup-buttons-container {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  margin-top: 30px;
-}
-
-.home-reset-popup-message-content h2 {
-  margin: 0;
-  text-align: center;
-}
-
-.home-finish-test-control {
+.home-for-who-section {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: stretch;
-  gap: 10px;
+  max-width: 45%;
 }
 
-.home-finish-test-control p {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #bbbbbb;
-  display: flex;
-  align-items: center;
-  min-height: 1.5em;
+.home-instructions-section {
+  max-width: 45%;
 }
 
-.home-finish-test-control p .material-symbols-outlined {
-  vertical-align: middle;
-  margin-right: 5px;
-  font-size: 1rem;
+.home-instructions-section ol {
+  flex: 1;
+  font-size: 1.3rem;
 }
-
-.home-save-test-button {
-  background-color: #5f85db;
-}
-
-.home-save-test-button.disabled-button {
-  background-color: #353941;
-  cursor: not-allowed;
-}
-
-.home-save-test-button.disabled-button:hover {
-  border-color: transparent;
-} */
