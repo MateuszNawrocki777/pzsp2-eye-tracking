@@ -24,7 +24,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="home-instructions-section">
-            <h1>How it works?</h1>
+            <h1>How does it work?</h1>
             <ol>
               <li>
                 Create a study. Upload images (PNG / JPG / PDF) and configure
