@@ -28,7 +28,7 @@ function Navigation() {
         <div className='header-navigation-div'>
             <NavLink to="/" className={"header-navigation-button"}>Home</NavLink>
             <NavLink to="/newTest" className={"header-navigation-button"}>New Test</NavLink>
-            {isLoggedIn && <NavLink to="/myTests" className={"header-navigation-button"}>My Tests</NavLink>}
+            {!isLoggedIn && <NavLink to="/myTests" className={"header-navigation-button"}>My Tests</NavLink>}
             {role === "ADMIN" && <NavLink to="/admin" className={"header-navigation-button"}>Admin</NavLink>}
             {isLoggedIn ? (
                 <a
