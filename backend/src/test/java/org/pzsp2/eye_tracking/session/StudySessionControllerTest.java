@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.pzsp2.eye_tracking.auth.jwt.JwtService;
+import org.pzsp2.eye_tracking.share.StudyShareLinkRepository;
 import org.pzsp2.eye_tracking.storage.Study;
 import org.pzsp2.eye_tracking.storage.StudyMaterial;
 import org.pzsp2.eye_tracking.storage.StudyMaterialRepository;
@@ -21,7 +22,6 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -51,6 +51,9 @@ class StudySessionControllerTest {
     private StudyMaterialRepository materialRepository;
 
     @Autowired
+    private StudyShareLinkRepository shareLinkRepository;
+
+    @Autowired
     private UserAccountRepository userAccountRepository;
 
     @Autowired
@@ -61,13 +64,15 @@ class StudySessionControllerTest {
 
     @BeforeEach
     void setUp() {
+        shareLinkRepository.deleteAll();
         sessionRepository.deleteAll();
         materialRepository.deleteAll();
         studyRepository.deleteAll();
         userAccountRepository.deleteAll();
 
         owner = userAccountRepository.save(new UserAccount(UUID.randomUUID(), "owner@test.local", "pw", UserRole.USER));
-        intruder = userAccountRepository.save(new UserAccount(UUID.randomUUID(), "intruder@test.local", "pw", UserRole.USER));
+        intruder = userAccountRepository
+                .save(new UserAccount(UUID.randomUUID(), "intruder@test.local", "pw", UserRole.USER));
     }
 
     private String bearer(UserAccount account) {
