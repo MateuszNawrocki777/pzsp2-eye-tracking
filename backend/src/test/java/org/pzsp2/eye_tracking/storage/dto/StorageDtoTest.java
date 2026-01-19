@@ -2,6 +2,7 @@ package org.pzsp2.eye_tracking.storage.dto;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -28,13 +29,17 @@ class StorageDtoTest {
     assertFalse(request.getDispTimeLeft());
     assertEquals(time, request.getTimePerImageMs());
     assertTrue(request.getRandomizeOrder());
+
+    assertNotNull(request.toString());
   }
 
   @Test
   void testTestDetailsDto() {
     TestDetailsDto dto = new TestDetailsDto();
     UUID id = UUID.randomUUID();
-    List<String> links = List.of("http://link1.com", "http://link2.com");
+    List<String> links = new ArrayList<>();
+    links.add("http://link1.com");
+    links.add("http://link2.com");
 
     dto.setId(id);
     dto.setTitle("Title");
@@ -52,8 +57,12 @@ class StorageDtoTest {
     assertTrue(dto.getDispTimeLeft());
     assertEquals(100, dto.getTimePerImageMs());
     assertFalse(dto.getRandomizeOrder());
+
     assertEquals(links, dto.getFileLinks());
-    assertEquals(2, dto.getFileLinks().size());
+    assertNotSame(links, dto.getFileLinks());
+
+    dto.setFileLinks(null);
+    assertNull(dto.getFileLinks());
   }
 
   @Test
@@ -79,5 +88,7 @@ class StorageDtoTest {
     assertEquals(newId, dto.getId());
     assertEquals(newTitle, dto.getTitle());
     assertEquals(newLink, dto.getFirstImageLink());
+
+    assertNotNull(dto.toString());
   }
 }
