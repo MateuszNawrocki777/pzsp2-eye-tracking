@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/eye_tracking_db
-    username: postgres
-    password: admin123
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -13,14 +13,21 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 app:
   security:
     jwt:
       # 64 characters (512 bits) default to satisfy HS512 requirements
-      secret: ${JWT_SECRET:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+      secret: ${JWT_SECRET}
       issuer: eye-tracking-api
       expiration-minutes: 60
     admin:
       email: ${APP_ADMIN_EMAIL:admin@eye-tracking.local}
       password: ${APP_ADMIN_PASSWORD:ChangeMeAdmin123!}
+
+file:
+  upload-dir: /app/uploads

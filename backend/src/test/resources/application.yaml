@@ -27,3 +27,6 @@ app:
     admin:
       email: test-admin@eye-tracking.local
       password: TestAdminPassword123!
+
+file:
+  upload-dir: ${TEST_FILE_UPLOAD_DIR:./target/test-uploads}
