@@ -2,6 +2,7 @@ package org.pzsp2.eye_tracking.storage;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.Parameter;
 import java.util.List;
 import java.util.UUID;
@@ -22,6 +23,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/tests")
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring Dependency Injection")
 public class TestController {
 
   private final FileStorageService fileStorageService;

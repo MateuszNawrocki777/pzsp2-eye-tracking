@@ -1,11 +1,15 @@
 package org.pzsp2.eye_tracking.storage;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "StudyMaterials")
+@SuppressFBWarnings(
+    value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"},
+    justification = "JPA entities are mutable by design")
 public class StudyMaterial {
 
   @Id

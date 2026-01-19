@@ -1,5 +1,6 @@
 package org.pzsp2.eye_tracking.config;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
 import org.pzsp2.eye_tracking.auth.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
@@ -20,6 +21,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring Bean injection")
 public class SecurityConfig {
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;

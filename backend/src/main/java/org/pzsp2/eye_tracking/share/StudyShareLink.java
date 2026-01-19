@@ -1,14 +1,19 @@
 package org.pzsp2.eye_tracking.share;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.pzsp2.eye_tracking.storage.Study;
 
 @Data
 @NoArgsConstructor
 @Entity
 @Table(name = "study_share_links")
+@SuppressFBWarnings(
+    value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"},
+    justification = "JPA entities are mutable by design")
 public class StudyShareLink {
 
   @Id
@@ -17,7 +22,7 @@ public class StudyShareLink {
 
   @ManyToOne
   @JoinColumn(name = "study_id", nullable = false)
-  private org.pzsp2.eye_tracking.storage.Study study;
+  private Study study;
 
   @Column(name = "max_uses")
   private Integer maxUses;

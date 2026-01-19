@@ -1,5 +1,6 @@
 package org.pzsp2.eye_tracking.share;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.UUID;
 import org.pzsp2.eye_tracking.auth.AuthenticatedUser;
 import org.pzsp2.eye_tracking.share.dto.StudyShareLinkCreateRequest;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/tests")
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring Dependency Injection")
 public class StudyShareLinkController {
 
   private final StudyShareLinkService shareLinkService;

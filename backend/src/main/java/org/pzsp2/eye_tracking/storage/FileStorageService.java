@@ -5,6 +5,8 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.*;
@@ -27,6 +29,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @SuppressWarnings("null")
 @Service
+@SuppressFBWarnings("EI_EXPOSE_REP2")
 public class FileStorageService {
 
   private final Path fileStorageLocation;
@@ -45,7 +48,10 @@ public class FileStorageService {
     this.studyRepository = studyRepository;
     this.shareLinkService = shareLinkService;
     this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+  }
 
+  @PostConstruct
+  public void init() {
     try {
       Files.createDirectories(this.fileStorageLocation);
     } catch (Exception ex) {
