@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GazePointDto {
-    private double x;
-    private double y;
+  private double x;
+  private double y;
 }

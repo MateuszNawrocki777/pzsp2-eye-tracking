@@ -1,7 +1,20 @@
 package org.pzsp2.eye_tracking.share;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,259 +33,248 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
-import static org.springframework.http.HttpStatus.FORBIDDEN;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-
 @ExtendWith(MockitoExtension.class)
 class StudyShareLinkServiceTest {
 
-    @Mock
-    private StudyShareLinkRepository shareLinkRepository;
-    @Mock
-    private StudyRepository studyRepository;
-    @Mock
-    private StudyMaterialRepository materialRepository;
+  @Mock private StudyShareLinkRepository shareLinkRepository;
+  @Mock private StudyRepository studyRepository;
+  @Mock private StudyMaterialRepository materialRepository;
 
-    private StudyShareLinkService service;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+  private StudyShareLinkService service;
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @BeforeEach
-    void setUp() {
-        service = new StudyShareLinkService(shareLinkRepository, studyRepository, materialRepository);
+  @BeforeEach
+  void setUp() {
+    service = new StudyShareLinkService(shareLinkRepository, studyRepository, materialRepository);
 
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
-    }
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+  }
 
-    @Test
-    void createShareLink_success() {
-        UUID testId = UUID.randomUUID();
-        UUID ownerId = UUID.randomUUID();
+  @Test
+  void createShareLink_success() {
+    UUID testId = UUID.randomUUID();
+    UUID ownerId = UUID.randomUUID();
 
-        Study study = new Study();
-        study.setStudyId(testId);
-        study.setResearcherId(ownerId);
+    Study study = new Study();
+    study.setStudyId(testId);
+    study.setResearcherId(ownerId);
 
-        StudyShareLinkCreateRequest req = new StudyShareLinkCreateRequest();
-        req.setMaxUses(5);
+    StudyShareLinkCreateRequest req = new StudyShareLinkCreateRequest();
+    req.setMaxUses(5);
 
-        given(studyRepository.findById(testId)).willReturn(Optional.of(study));
-        given(shareLinkRepository.existsById(any())).willReturn(false);
-        given(shareLinkRepository.save(any(StudyShareLink.class))).willAnswer(i -> i.getArgument(0));
+    given(studyRepository.findById(testId)).willReturn(Optional.of(study));
+    given(shareLinkRepository.existsById(any())).willReturn(false);
+    given(shareLinkRepository.save(any(StudyShareLink.class))).willAnswer(i -> i.getArgument(0));
 
-        StudyShareLinkResponse response = service.createShareLinkForResearcher(testId, ownerId, req);
+    StudyShareLinkResponse response = service.createShareLinkForResearcher(testId, ownerId, req);
 
-        assertNotNull(response.getAccessLink());
-        assertEquals(5, response.getMaxUses());
-        assertNotNull(response.getAccessUrl());
-        verify(shareLinkRepository).save(any(StudyShareLink.class));
-    }
+    assertNotNull(response.getAccessLink());
+    assertEquals(5, response.getMaxUses());
+    assertNotNull(response.getAccessUrl());
+    verify(shareLinkRepository).save(any(StudyShareLink.class));
+  }
 
-    @Test
-    void createShareLink_throwsNotFound_whenStudyMissing() {
-        UUID testId = UUID.randomUUID();
-        given(studyRepository.findById(testId)).willReturn(Optional.empty());
+  @Test
+  void createShareLink_throwsNotFound_whenStudyMissing() {
+    UUID testId = UUID.randomUUID();
+    given(studyRepository.findById(testId)).willReturn(Optional.empty());
 
-        assertThrows(ResponseStatusException.class,
+    assertThrows(
+        ResponseStatusException.class,
+        () -> service.createShareLinkForResearcher(testId, UUID.randomUUID(), null));
+  }
+
+  @Test
+  void createShareLink_throwsForbidden_whenNotOwner() {
+    UUID testId = UUID.randomUUID();
+    Study study = new Study();
+    study.setResearcherId(UUID.randomUUID());
+
+    given(studyRepository.findById(testId)).willReturn(Optional.of(study));
+
+    ResponseStatusException ex =
+        assertThrows(
+            ResponseStatusException.class,
             () -> service.createShareLinkForResearcher(testId, UUID.randomUUID(), null));
-    }
+    assertEquals(FORBIDDEN, ex.getStatusCode());
+  }
 
-    @Test
-    void createShareLink_throwsForbidden_whenNotOwner() {
-        UUID testId = UUID.randomUUID();
-        Study study = new Study();
-        study.setResearcherId(UUID.randomUUID());
+  @Test
+  void getTestDetails_success_andIncrementsCounter() throws JsonProcessingException {
+    String linkId = "valid-link";
+    Study study = new Study();
+    study.setTitle("Title");
+    study.setSettings("{}");
 
-        given(studyRepository.findById(testId)).willReturn(Optional.of(study));
+    StudyShareLink link = new StudyShareLink();
+    link.setAccessLink(linkId);
+    link.setStudy(study);
+    link.setUseCounter(0);
+    link.setMaxUses(10);
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-            () -> service.createShareLinkForResearcher(testId, UUID.randomUUID(), null));
-        assertEquals(FORBIDDEN, ex.getStatusCode());
-    }
+    StudyMaterial mat = new StudyMaterial();
+    mat.setMaterialId(UUID.randomUUID());
+    mat.setStudy(study);
 
-    @Test
-    void getTestDetails_success_andIncrementsCounter() throws JsonProcessingException {
-        String linkId = "valid-link";
-        Study study = new Study();
-        study.setTitle("Title");
-        study.setSettings("{}");
+    given(shareLinkRepository.findById(linkId)).willReturn(Optional.of(link));
+    given(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study)).willReturn(List.of(mat));
 
-        StudyShareLink link = new StudyShareLink();
-        link.setAccessLink(linkId);
-        link.setStudy(study);
-        link.setUseCounter(0);
-        link.setMaxUses(10);
+    TestDetailsDto dto = service.getTestDetailsForShareLink(linkId);
 
-        StudyMaterial mat = new StudyMaterial();
-        mat.setMaterialId(UUID.randomUUID());
-        mat.setStudy(study);
+    assertNotNull(dto);
+    assertEquals("Title", dto.getTitle());
 
-        given(shareLinkRepository.findById(linkId)).willReturn(Optional.of(link));
-        given(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study)).willReturn(List.of(mat));
+    ArgumentCaptor<StudyShareLink> captor = ArgumentCaptor.forClass(StudyShareLink.class);
+    verify(shareLinkRepository).save(captor.capture());
+    assertEquals(1, captor.getValue().getUseCounter());
+  }
 
-        TestDetailsDto dto = service.getTestDetailsForShareLink(linkId);
+  @Test
+  void getTestDetails_throwsNotFound_whenLinkMissing() {
+    given(shareLinkRepository.findById("bad-link")).willReturn(Optional.empty());
 
-        assertNotNull(dto);
-        assertEquals("Title", dto.getTitle());
+    ResponseStatusException ex =
+        assertThrows(
+            ResponseStatusException.class, () -> service.getTestDetailsForShareLink("bad-link"));
+    assertEquals(NOT_FOUND, ex.getStatusCode());
+  }
 
-        ArgumentCaptor<StudyShareLink> captor = ArgumentCaptor.forClass(StudyShareLink.class);
-        verify(shareLinkRepository).save(captor.capture());
-        assertEquals(1, captor.getValue().getUseCounter());
-    }
+  @Test
+  void getTestDetails_throwsNotFound_whenExpired() {
+    String linkId = "expired-link";
+    StudyShareLink link = new StudyShareLink();
+    link.setExpiresAt(LocalDateTime.now().minusDays(1));
 
-    @Test
-    void getTestDetails_throwsNotFound_whenLinkMissing() {
-        given(shareLinkRepository.findById("bad-link")).willReturn(Optional.empty());
+    given(shareLinkRepository.findById(linkId)).willReturn(Optional.of(link));
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-            () -> service.getTestDetailsForShareLink("bad-link"));
-        assertEquals(NOT_FOUND, ex.getStatusCode());
-    }
+    ResponseStatusException ex =
+        assertThrows(
+            ResponseStatusException.class, () -> service.getTestDetailsForShareLink(linkId));
+    assertEquals(NOT_FOUND, ex.getStatusCode());
+    assertEquals("Share link expired", ex.getReason());
+  }
 
-    @Test
-    void getTestDetails_throwsNotFound_whenExpired() {
-        String linkId = "expired-link";
-        StudyShareLink link = new StudyShareLink();
-        link.setExpiresAt(LocalDateTime.now().minusDays(1));
+  @Test
+  void getTestDetails_throwsNotFound_whenMaxUsesReached() {
+    String linkId = "limit-link";
+    StudyShareLink link = new StudyShareLink();
+    link.setMaxUses(5);
+    link.setUseCounter(5);
 
-        given(shareLinkRepository.findById(linkId)).willReturn(Optional.of(link));
+    given(shareLinkRepository.findById(linkId)).willReturn(Optional.of(link));
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-            () -> service.getTestDetailsForShareLink(linkId));
-        assertEquals(NOT_FOUND, ex.getStatusCode());
-        assertEquals("Share link expired", ex.getReason());
-    }
+    ResponseStatusException ex =
+        assertThrows(
+            ResponseStatusException.class, () -> service.getTestDetailsForShareLink(linkId));
+    assertEquals(NOT_FOUND, ex.getStatusCode());
+    assertEquals("Share link exhausted", ex.getReason());
+  }
 
-    @Test
-    void getTestDetails_throwsNotFound_whenMaxUsesReached() {
-        String linkId = "limit-link";
-        StudyShareLink link = new StudyShareLink();
-        link.setMaxUses(5);
-        link.setUseCounter(5);
+  @Test
+  void getTestDetails_handlesNullUseCounter() throws JsonProcessingException {
+    String linkId = "null-counter-link";
+    Study study = new Study();
+    study.setSettings("{}");
 
-        given(shareLinkRepository.findById(linkId)).willReturn(Optional.of(link));
+    StudyShareLink link = new StudyShareLink();
+    link.setStudy(study);
+    link.setUseCounter(null);
+    link.setMaxUses(5);
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
-            () -> service.getTestDetailsForShareLink(linkId));
-        assertEquals(NOT_FOUND, ex.getStatusCode());
-        assertEquals("Share link exhausted", ex.getReason());
-    }
+    given(shareLinkRepository.findById(linkId)).willReturn(Optional.of(link));
+    given(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study)).willReturn(List.of());
 
-    @Test
-    void getTestDetails_handlesNullUseCounter() throws JsonProcessingException {
-        String linkId = "null-counter-link";
-        Study study = new Study();
-        study.setSettings("{}");
+    service.getTestDetailsForShareLink(linkId);
 
-        StudyShareLink link = new StudyShareLink();
-        link.setStudy(study);
-        link.setUseCounter(null);
-        link.setMaxUses(5);
+    ArgumentCaptor<StudyShareLink> captor = ArgumentCaptor.forClass(StudyShareLink.class);
+    verify(shareLinkRepository).save(captor.capture());
+    assertEquals(
+        1, captor.getValue().getUseCounter(), "Null should be treated like 0 and incremented to 1");
+  }
 
-        given(shareLinkRepository.findById(linkId)).willReturn(Optional.of(link));
-        given(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study)).willReturn(List.of());
+  @Test
+  void getTestDetails_handlesJsonError() {
+    String linkId = "ok-link";
+    Study study = new Study();
+    study.setSettings("{ bad json");
+    StudyShareLink link = new StudyShareLink();
+    link.setStudy(study);
 
-        service.getTestDetailsForShareLink(linkId);
+    given(shareLinkRepository.findById(linkId)).willReturn(Optional.of(link));
 
-        ArgumentCaptor<StudyShareLink> captor = ArgumentCaptor.forClass(StudyShareLink.class);
-        verify(shareLinkRepository).save(captor.capture());
-        assertEquals(1, captor.getValue().getUseCounter(), "Null should be treated like 0 and incremented to 1");
-    }
+    assertThrows(RuntimeException.class, () -> service.getTestDetailsForShareLink(linkId));
+  }
 
-    @Test
-    void getTestDetails_handlesJsonError() {
-        String linkId = "ok-link";
-        Study study = new Study();
-        study.setSettings("{ bad json");
-        StudyShareLink link = new StudyShareLink();
-        link.setStudy(study);
+  @Test
+  void deleteLinksForStudy_deletesAll() {
+    Study study = new Study();
+    given(shareLinkRepository.findAllByStudy(study)).willReturn(List.of(new StudyShareLink()));
 
-        given(shareLinkRepository.findById(linkId)).willReturn(Optional.of(link));
+    service.deleteLinksForStudy(study);
 
-        assertThrows(RuntimeException.class, () -> service.getTestDetailsForShareLink(linkId));
-    }
+    verify(shareLinkRepository).deleteAll(anyList());
+  }
 
-    @Test
-    void deleteLinksForStudy_deletesAll() {
-        Study study = new Study();
-        given(shareLinkRepository.findAllByStudy(study)).willReturn(List.of(new StudyShareLink()));
+  @Test
+  void createShareLink_handlesCollision_andRetries() {
+    UUID testId = UUID.randomUUID();
+    UUID ownerId = UUID.randomUUID();
+    Study study = new Study();
+    study.setStudyId(testId);
+    study.setResearcherId(ownerId);
 
-        service.deleteLinksForStudy(study);
+    given(studyRepository.findById(testId)).willReturn(Optional.of(study));
 
-        verify(shareLinkRepository).deleteAll(anyList());
-    }
+    given(shareLinkRepository.existsById(anyString())).willReturn(true).willReturn(false);
 
-    @Test
-    void createShareLink_handlesCollision_andRetries() {
-        UUID testId = UUID.randomUUID();
-        UUID ownerId = UUID.randomUUID();
-        Study study = new Study();
-        study.setStudyId(testId);
-        study.setResearcherId(ownerId);
+    given(shareLinkRepository.save(any(StudyShareLink.class))).willAnswer(i -> i.getArgument(0));
 
-        given(studyRepository.findById(testId)).willReturn(Optional.of(study));
+    StudyShareLinkResponse response =
+        service.createShareLinkForResearcher(testId, ownerId, new StudyShareLinkCreateRequest());
 
-        given(shareLinkRepository.existsById(anyString()))
-                .willReturn(true)
-                .willReturn(false);
+    assertNotNull(response.getAccessLink());
+    verify(shareLinkRepository, times(2)).existsById(anyString());
+  }
 
-        given(shareLinkRepository.save(any(StudyShareLink.class))).willAnswer(i -> i.getArgument(0));
+  @Test
+  void createShareLink_handlesNullRequest() {
+    UUID testId = UUID.randomUUID();
+    UUID ownerId = UUID.randomUUID();
+    Study study = new Study();
+    study.setStudyId(testId);
+    study.setResearcherId(ownerId);
 
-        StudyShareLinkResponse response = service.createShareLinkForResearcher(testId, ownerId, new StudyShareLinkCreateRequest());
+    given(studyRepository.findById(testId)).willReturn(Optional.of(study));
+    given(shareLinkRepository.existsById(anyString())).willReturn(false);
+    given(shareLinkRepository.save(any(StudyShareLink.class))).willAnswer(i -> i.getArgument(0));
 
-        assertNotNull(response.getAccessLink());
-        verify(shareLinkRepository, times(2)).existsById(anyString());
-    }
+    StudyShareLinkResponse response = service.createShareLinkForResearcher(testId, ownerId, null);
 
-    @Test
-    void createShareLink_handlesNullRequest() {
-        UUID testId = UUID.randomUUID();
-        UUID ownerId = UUID.randomUUID();
-        Study study = new Study();
-        study.setStudyId(testId);
-        study.setResearcherId(ownerId);
+    assertNotNull(response.getAccessLink());
+    assertNull(response.getMaxUses());
+    assertNull(response.getExpiresAt());
+  }
 
-        given(studyRepository.findById(testId)).willReturn(Optional.of(study));
-        given(shareLinkRepository.existsById(anyString())).willReturn(false);
-        given(shareLinkRepository.save(any(StudyShareLink.class))).willAnswer(i -> i.getArgument(0));
+  @Test
+  void getTestDetails_allowsAccess_whenMaxUsesIsNull() throws JsonProcessingException {
+    String linkId = "unlimited-link";
+    Study study = new Study();
+    study.setSettings("{}");
 
-        StudyShareLinkResponse response = service.createShareLinkForResearcher(testId, ownerId, null);
+    StudyShareLink link = new StudyShareLink();
+    link.setAccessLink(linkId);
+    link.setStudy(study);
+    link.setUseCounter(100);
+    link.setMaxUses(null);
 
-        assertNotNull(response.getAccessLink());
-        assertNull(response.getMaxUses());
-        assertNull(response.getExpiresAt());
-    }
+    given(shareLinkRepository.findById(linkId)).willReturn(Optional.of(link));
+    given(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study)).willReturn(List.of());
 
-    @Test
-    void getTestDetails_allowsAccess_whenMaxUsesIsNull() throws JsonProcessingException {
-        String linkId = "unlimited-link";
-        Study study = new Study();
-        study.setSettings("{}");
+    TestDetailsDto result = service.getTestDetailsForShareLink(linkId);
 
-        StudyShareLink link = new StudyShareLink();
-        link.setAccessLink(linkId);
-        link.setStudy(study);
-        link.setUseCounter(100);
-        link.setMaxUses(null);
-
-        given(shareLinkRepository.findById(linkId)).willReturn(Optional.of(link));
-        given(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study)).willReturn(List.of());
-
-        TestDetailsDto result = service.getTestDetailsForShareLink(linkId);
-
-        assertNotNull(result);
-        verify(shareLinkRepository).save(link);
-        assertEquals(101, link.getUseCounter());
-    }
+    assertNotNull(result);
+    verify(shareLinkRepository).save(link);
+    assertEquals(101, link.getUseCounter());
+  }
 }
