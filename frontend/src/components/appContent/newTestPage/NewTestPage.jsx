@@ -10,8 +10,10 @@ import ImageThumbnailWithButtons from "../../thumbnails/ImageThumbnailWithButton
 import PopupMessage from "../../popupMessage/PopupMessage";
 
 import createTestCall from "../../../services/api/createTestCall";
+import LoadingButton from "../../loadingButton/LoadingButton";
 
 import "./NewTestPage.css";
+
 
 export default function NewTestPage() {
   const navigate = useNavigate();
@@ -78,11 +80,10 @@ export default function NewTestPage() {
     formData.append("timePerImageMs", secondsPerImage);
     formData.append("randomizeOrder", randomizeImageOrder);
     
-    // for (let pair of formData.entries()) {
-    //   console.log(pair[0], pair[1]);
-    // }
+    const response = await createTestCall(formData);
+    const testId = response.data;
 
-    await createTestCall(formData);
+    navigate(`/test/${testId}`);
   }
 
   return (
@@ -105,7 +106,7 @@ export default function NewTestPage() {
       </div>
       <input
         type="file"
-        accept=".png,.jpg,.jpeg,.pdf"
+        accept=".png,.jpg,.jpeg,.webp"
         multiple
         ref={fileInputRef}
         onChange={handleFileInputChange}
@@ -135,11 +136,6 @@ export default function NewTestPage() {
 
     const buttons = hovered && (
       <>
-        {/* <button className="new-test-preview-image-button">
-                    <span className="material-symbols-outlined">
-                    visibility
-                    </span>
-                </button> TODO: Make this button functional */}
         <button
           className="new-test-remove-image-button"
           onClick={() => handleRemoveImage(image)}
@@ -292,7 +288,7 @@ export default function NewTestPage() {
             defaultValue={testName}
             onBlur={() => setTestName(testNameInputRef.current.value)}
           />
-          <button
+          <LoadingButton
             className={`new-test-save-test-button ${
               !isLoggedIn ? "disabled-button" : ""
             }`}
@@ -300,7 +296,7 @@ export default function NewTestPage() {
             onClick={handleCreateTest}
           >
             Save Test
-          </button>
+          </LoadingButton>
           <button onClick={() => navigate("/runTest")}>Run Test</button>
         </div>
       </div>
