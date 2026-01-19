@@ -16,8 +16,6 @@ import "./NewTestPage.css";
 export default function NewTestPage() {
   const navigate = useNavigate();
 
-  const { images, setImages } = useNewTest();
-
   const [showResetPopup, setShowResetPopup] = useState(false);
 
   const fileInputRef = useRef(null);
@@ -30,8 +28,8 @@ export default function NewTestPage() {
   const randomizeImagesInputRef = useRef(null);
 
   const {
-    // images,
-    // setImages,
+    images,
+    setImages,
     testName,
     setTestName,
     secondsPerImage,
@@ -51,21 +49,15 @@ export default function NewTestPage() {
 
   function handleFileInputChange(event) {
     const files = Array.from(event.target.files);
-    const newImages = files.map((file) => URL.createObjectURL(file));
-    setImages((prevImages) => [...prevImages, ...newImages]);
+
+    const newImages = files.map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+
+    setImages((prev) => [...prev, ...newImages]);
     event.target.value = null;
   }
-  // function handleFileInputChange(event) {
-  //   const files = Array.from(event.target.files);
-
-  //   const newImages = files.map((file) => ({
-  //     file,
-  //     preview: URL.createObjectURL(file),
-  //   }));
-
-  //   setImages((prev) => [...prev, ...newImages]);
-  //   event.target.value = null;
-  // }
 
   function handleRemoveImage(image) {
     setImages((prevImages) => prevImages.filter((img) => img !== image));
@@ -74,21 +66,18 @@ export default function NewTestPage() {
   async function handleCreateTest() {
     const formData = new FormData();
 
-    // images.forEach((img) => {
-    //   formData.append("files", img.file);
-    // });
-
     images.forEach((img) => {
-      formData.append("files", img);
+      formData.append("files", img.file);
     });
 
-    formData.append("testName", testName);
-    formData.append("secondsPerImage", secondsPerImage);
-    formData.append("randomizeImageOrder", randomizeImageOrder);
-    formData.append("enableDisplayGazeTracking", enableDisplayGazeTracking);
-    formData.append("enableDisplayTimeLeft", enableDisplayTimeLeft);
+    formData.append("title", testName);
+    formData.append("description", "example description");
 
-    // Sprawdzenie
+    formData.append("dispGazeTracking", enableDisplayGazeTracking);
+    formData.append("dispTimeLeft", enableDisplayTimeLeft);
+    formData.append("timePerImageMs", secondsPerImage);
+    formData.append("randomizeOrder", randomizeImageOrder);
+    
     // for (let pair of formData.entries()) {
     //   console.log(pair[0], pair[1]);
     // }
@@ -105,7 +94,6 @@ export default function NewTestPage() {
         </div>
         <div className="new-test-control-container">
           <Settings />
-          {/* <DataReceiver /> */}
           <FinishTest />
         </div>
         <button
@@ -163,7 +151,7 @@ export default function NewTestPage() {
 
     return (
       <ThumbnailWithContent
-        image={<ImageThumbnailWithButtons image={image} buttons={buttons} />}
+        image={<ImageThumbnailWithButtons image={image.preview} buttons={buttons} />}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       />
