@@ -1,0 +1,65 @@
+.home-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.home-content-container {
+  height: 80%;
+  width: 83.1%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 20px;
+  background-color: #353941;
+  border-radius: 8px;
+  padding: 20px;
+  overflow-y: hidden;
+}
+
+.home-content-container h1 {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.home-content-container h2,
+.home-content-container h3 {
+  text-align: center;
+}
+
+.home-split-section {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.home-audience-tiles-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  gap: 20px;
+}
+
+.home-for-who-section {
+  flex: 1;
+  max-width: 45%;
+}
+
+.home-instructions-section {
+  max-width: 45%;
+}
+
+.home-instructions-section ol {
+  flex: 1;
+  font-size: 1.3rem;
+}
+
+.home-audience-tile {
+  background-color: #26282B;
+  padding: 20px;
+  border-radius: 8px;
+}

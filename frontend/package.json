@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
     "test": "echo \"No frontend tests\"",
     "lint": "eslint .",
@@ -14,7 +14,8 @@
     "axios": "^1.13.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-router-dom": "^7.9.6"
+    "react-router-dom": "^7.9.6",
+    "simpleheat": "^0.4.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
