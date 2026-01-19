@@ -6,7 +6,8 @@ import { useNewTest } from '../../../hooks/newTestContext'
 import getTestCall from '../../../services/api/getTestCall';
 import getOnlineTestCall from '../../../services/api/getOnlineTestCall';
 
-import Heatmap from '../../heatmap/Heatmap';
+import TestResultImages from '../../testResultImages/TestResultImages';
+import HeatmapPopup from '../../heatmap/HeatmapPopup';
 
 import './RunTestPage.css'
 
@@ -28,6 +29,8 @@ export default function RunTestPage({ source }) {
     const [testName, setTestName] = useState("Local Test");
     const [testId, setTestId] = useState(null);
 
+    const [popupImageIndex, setPopupImageIndex] = useState(null);
+
     let paramId = null;
 
     if (source !== 'local') {
@@ -36,7 +39,7 @@ export default function RunTestPage({ source }) {
     }
 
     const windowRef = useRef(null);
-    const [results, setResults] = useState(null);
+    const [results, setResults] = useState([[0.3, 0.5], [0.6, 0.7]]); // For testing purposes, replace with null to disable
 
     useEffect(() => {
         if (source === 'local') {
@@ -87,9 +90,18 @@ export default function RunTestPage({ source }) {
                         <button onClick={handleRun} className='run-test-run-button'>Start Test</button>
                     </div>
                 ) : (
-                    <Heatmap image={images[0]} points={results.map(([x, y]) => [x, y, 1])} />
+                    <>
+                        <TestResultImages images={images} setIndex={(index) => setPopupImageIndex(index)} />
+                    </>
                 )}
             </div>
+            {popupImageIndex !== null && (
+                <HeatmapPopup
+                    image={images[popupImageIndex]}
+                    points={results.map(([x, y]) => [x, y, 1])}
+                    onClose={() => setPopupImageIndex(null)}
+                />
+            )}
         </div>
     )
 
