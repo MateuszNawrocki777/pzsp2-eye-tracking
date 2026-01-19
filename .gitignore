@@ -1,2 +1,3 @@
 .vscode/
 backend/uploads_data
+.env
