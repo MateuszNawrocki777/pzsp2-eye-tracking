@@ -9,7 +9,7 @@
     border: 2px solid #353941;
     border-radius: 8px;
     position: relative;
-    /* TODO: maybe add grow */
+    flex: 1;
 }
 
 .heatmap-image {

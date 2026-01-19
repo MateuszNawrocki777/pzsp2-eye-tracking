@@ -8,6 +8,8 @@ import generateLinkCall from "../../../services/api/generateLinkCall";
 import TestResultImages from "../../testResultImages/TestResultImages";
 import PopupMessage from "../../popupMessage/PopupMessage";
 
+import HeatmapPopup from "../../heatmap/HeatmapPopup";
+
 import LoadingButton from "../../loadingButton/LoadingButton";
 
 
@@ -18,9 +20,10 @@ export default function TestDetailsPage() {
 
   const navigate = useNavigate();
 
-  const [images, setImages] = useState(["/logo.png", "/logo.png", "/logo.png"]);
+  const [images, setImages] = useState([]);
 
   const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [popupImageIndex, setPopupImageIndex] = useState(null);
 
   const [testName, setTestName] = useState("Loading test...");
     const [secondsPerImage, setSecondsPerImage] = useState();
@@ -56,7 +59,7 @@ export default function TestDetailsPage() {
       <div className="test-details-content-container">
         <div>
           <h1>{testName}</h1>
-          <TestResultImages images={images} setIndex={(index) => console.log(index)} />
+          <TestResultImages images={images} setIndex={(index) => setPopupImageIndex(index)} />
         </div>
         <div className="test-details-control-container">
           <Settings
@@ -74,6 +77,13 @@ export default function TestDetailsPage() {
         </button>
       </div>
       {showDeletePopup && <DeletePopup />}
+      {popupImageIndex !== null && (
+        <HeatmapPopup
+          image={images[popupImageIndex]}
+          points={[]}
+          onClose={() => setPopupImageIndex(null)}
+        />
+      )}
     </div>
   );
 
