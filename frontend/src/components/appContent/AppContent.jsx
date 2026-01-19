@@ -8,6 +8,7 @@ import AdminPage from "./adminPage/AdminPage";
 import RunTestPage from "./runTestPage/RunTestPage";
 import HomePage from "./homePage/HomePage";
 import MyTestsPage from "./myTestsPage/MyTestsPage"
+import TestDetailsPage from "./testDetailsPage/TestDetailsPage";
 
 import "./AppContent.css";
 
@@ -22,6 +23,7 @@ export default function AppContent() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/newTest" element={<NewTestPage />} />
         <Route path="/myTests" element={<MyTestsPage />} />
+        <Route path="/myTests/:id" element={<TestDetailsPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/runTest" element={<RunTestPage />} />
         <Route path="*" element={<PageNotFound />} />

@@ -17,7 +17,6 @@ export default function MyTestsPage() {
     async function loadTests() {
       try {
         const response = await getTestsCall();
-        console.log("Loaded tests:", response.data);
         setTests(response.data);
       } catch (e) {
         console.error("Failed to load tests", e);

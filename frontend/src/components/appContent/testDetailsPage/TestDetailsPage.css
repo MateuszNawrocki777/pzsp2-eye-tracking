@@ -1,0 +1,178 @@
+.test-details-container {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.test-details-content-container {
+    height: 80%;
+    width: 83.1%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 20px;
+    background-color: #353941;
+    border-radius: 8px;
+    padding: 20px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.test-details-content-container h1 {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.test-details-images-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    overflow-x: auto;
+    background-color: #26282B;
+    border-radius: 8px;
+}
+
+.test-details-add-image-thumbnail {
+    cursor: pointer;
+}
+
+.test-details-add-image-text {
+    font-weight: normal;
+    cursor: auto;
+}
+
+.test-details-add-image-text:hover {
+    border: 1px solid transparent;
+}
+
+.test-details-preview-image-button {
+    top: 5px;
+    left: 5px;
+}
+
+.test-details-remove-image-button {
+    top: 5px;
+    right: 5px;
+}
+
+.test-details-remove-image-button:hover {
+    border-color: #ff4a4a;
+}
+
+.test-details-control-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.test-details-control-panel {
+    background-color: #26282B;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 20%;
+}
+
+.test-details-control-panel h2 {
+    margin: 0;
+    text-align: center;
+}
+
+.test-details-control-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
+}
+
+.test-details-time-input {
+    width: 2.5rem;
+}
+
+.test-details-time-input:hover,
+.test-details-control-checkbox input[type="number"]:hover {
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: #353941;
+    transition: border-color 0.25s;
+    color: #fff;
+}
+
+.test-details-delete-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: #26282B;
+}
+
+.test-details-delete-button:hover {
+    border-color: #ff4a4a;
+}
+
+.test-details-delete-popup-message-content {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    margin: 10px 20px;
+}
+
+.test-details-delete-popup-buttons-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 30px;
+}
+
+.test-details-delete-popup-message-content h2 {
+    margin: 0;
+    text-align: center;
+}
+
+.test-details-run-test-control {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: stretch;
+    gap: 10px;
+}
+
+.test-details-run-test-control p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #bbbbbb;
+    display: flex;
+    align-items: center;
+    min-height: 1.5em;
+}
+
+.test-details-run-test-control p .material-symbols-outlined {
+    vertical-align: middle;
+    margin-right: 5px;
+    font-size: 1rem;
+}
+
+.test-details-run-test-button {
+    background-color: #5F85DB;
+}
+
+.test-details-run-test-generate-button-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.test-details-run-test-link {
+    width: 60%;
+}
