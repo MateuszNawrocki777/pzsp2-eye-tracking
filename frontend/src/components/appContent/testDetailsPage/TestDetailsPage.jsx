@@ -61,7 +61,6 @@ export default function TestDetailsPage() {
     async function loadMainHeatmap() {
       try {
         const response = await getMainHeatmapCall(testId);
-        console.log("Main heatmap data:", response.data);
         setMainHeatmap(response.data.heatmaps);
       } catch (e) {
         console.error("Failed to load main heatmap", e);

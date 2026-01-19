@@ -25,7 +25,9 @@ export default function AppContent() {
         <Route path="/myTests" element={<MyTestsPage />} />
         <Route path="/myTests/:id" element={<TestDetailsPage />} />
         <Route path="/admin" element={<AdminPage />} />
-        <Route path="/runTest" element={<RunTestPage />} />
+        <Route path="/runTest/local" element={<RunTestPage source="local" />} />
+        <Route path="/runTest/my/:id" element={<RunTestPage source="my" />} />
+        <Route path="/runTest/online/:id" element={<RunTestPage source="online" />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </div>
