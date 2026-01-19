@@ -17,7 +17,6 @@ import "./NewTestPage.css";
 
 export default function NewTestPage() {
   const navigate = useNavigate();
-
   const [showResetPopup, setShowResetPopup] = useState(false);
 
   const fileInputRef = useRef(null);
@@ -49,13 +48,6 @@ export default function NewTestPage() {
     fileInputRef.current.click();
   }
 
-  // function handleFileInputChange(event) {
-  //   const files = Array.from(event.target.files);
-
-  //   const newImages = files.map((file) => ({
-  //     file,
-  //     // preview: URL.createObjectURL(file),
-  //   }));
   function handleFileInputChange(event) {
     setImages((prev) => [
       ...prev,
@@ -81,13 +73,14 @@ export default function NewTestPage() {
 
     formData.append("dispGazeTracking", enableDisplayGazeTracking);
     formData.append("dispTimeLeft", enableDisplayTimeLeft);
-    formData.append("timePerImageMs", secondsPerImage);
+    formData.append("timePerImageMs", secondsPerImage * 1000);
     formData.append("randomizeOrder", randomizeImageOrder);
 
     const response = await createTestCall(formData);
     const testId = response.data;
 
-    navigate(`/test/${testId}`);
+    navigate(`/myTests/${testId}`);
+    resetNewTestContext();
   }
 
   return (
