@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import deleteTestCall from "../../../services/api/deleteTestCall";
 import getTestCall from "../../../services/api/getTestCall";
 import generateLinkCall from "../../../services/api/generateLinkCall";
+import getMainHeatmapCall from "../../../services/api/getMainHeatmapCall";
 
 import TestResultImages from "../../testResultImages/TestResultImages";
 import PopupMessage from "../../popupMessage/PopupMessage";
@@ -26,11 +27,13 @@ export default function TestDetailsPage() {
   const [popupImageIndex, setPopupImageIndex] = useState(null);
 
   const [testName, setTestName] = useState("Loading test...");
-    const [secondsPerImage, setSecondsPerImage] = useState();
-    const [randomizeImageOrder, setRandomizeImageOrder] = useState(false);
-    const [enableDisplayGazeTracking, setEnableDisplayGazeTracking] =
-        useState(false);
-    const [enableDisplayTimeLeft, setEnableDisplayTimeLeft] = useState(false);
+  const [secondsPerImage, setSecondsPerImage] = useState();
+  const [randomizeImageOrder, setRandomizeImageOrder] = useState(false);
+  const [enableDisplayGazeTracking, setEnableDisplayGazeTracking] =
+      useState(false);
+  const [enableDisplayTimeLeft, setEnableDisplayTimeLeft] = useState(false);
+
+  const [mainHeatmap, setMainHeatmap] = useState(null);
 
   useEffect(() => {
     async function loadTest() {
@@ -52,6 +55,20 @@ export default function TestDetailsPage() {
     }
 
     loadTest();
+  }, [testId]);
+
+  useEffect(() => {
+    async function loadMainHeatmap() {
+      try {
+        const response = await getMainHeatmapCall(testId);
+        console.log("Main heatmap data:", response.data);
+        setMainHeatmap(response.data.heatmaps);
+      } catch (e) {
+        console.error("Failed to load main heatmap", e);
+      }
+    }
+
+    loadMainHeatmap();
   }, [testId]);
 
   return (
@@ -80,7 +97,7 @@ export default function TestDetailsPage() {
       {popupImageIndex !== null && (
         <HeatmapPopup
           image={images[popupImageIndex]}
-          points={[]}
+          points={mainHeatmap[popupImageIndex]}
           onClose={() => setPopupImageIndex(null)}
         />
       )}
