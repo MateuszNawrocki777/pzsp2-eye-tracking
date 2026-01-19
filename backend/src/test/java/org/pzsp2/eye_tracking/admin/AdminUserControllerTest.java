@@ -3,6 +3,7 @@ package org.pzsp2.eye_tracking.admin;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.pzsp2.eye_tracking.admin.dto.AdminUserResponse;
 import org.pzsp2.eye_tracking.admin.dto.UpdateUserBannedRequest;
 import org.pzsp2.eye_tracking.admin.dto.UpdateUserRoleRequest;
 import org.pzsp2.eye_tracking.auth.jwt.JwtService;
@@ -15,7 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Objects;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,6 +41,9 @@ class AdminUserControllerTest {
     @Autowired
     private JwtService jwtService;
 
+    @Autowired
+    private AdminUserController adminUserController;
+
     private UserAccount adminAccount;
     private UserAccount userAccount;
 
@@ -60,6 +64,10 @@ class AdminUserControllerTest {
                 UserRole.USER));
     }
 
+    private String bearer(UserAccount account) {
+        return "Bearer " + jwtService.generateToken(account).token();
+    }
+
     @Test
     void listUsers_asAdmin_returnsUsers() throws Exception {
         mockMvc.perform(get("/admin/users")
@@ -77,36 +85,95 @@ class AdminUserControllerTest {
     }
 
     @Test
+    void listUsers_unauthenticated_isForbidden() throws Exception {
+        mockMvc.perform(get("/admin/users"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void updateRole_promotesUser() throws Exception {
-        mockMvc.perform(post("/admin/users/{userId}/role", Objects.requireNonNull(userAccount.getUserId()))
-                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
-                .content(Objects.requireNonNull(
-                        objectMapper.writeValueAsString(new UpdateUserRoleRequest(UserRole.ADMIN))))
+        mockMvc.perform(post("/admin/users/{userId}/role", userAccount.getUserId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new UpdateUserRoleRequest(UserRole.ADMIN)))
                 .header("Authorization", bearer(adminAccount)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.role").value("ADMIN"));
 
-        UserAccount reloaded = userAccountRepository.findById(Objects.requireNonNull(userAccount.getUserId()))
-                .orElseThrow();
+        UserAccount reloaded = userAccountRepository.findById(userAccount.getUserId()).orElseThrow();
         assertThat(reloaded.getRole()).isEqualTo(UserRole.ADMIN);
     }
 
     @Test
+    void updateRole_asNonAdmin_isForbidden() throws Exception {
+        mockMvc.perform(post("/admin/users/{userId}/role", userAccount.getUserId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new UpdateUserRoleRequest(UserRole.ADMIN)))
+                .header("Authorization", bearer(userAccount)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void updateRole_userNotFound_returnsNotFound() throws Exception {
+        mockMvc.perform(post("/admin/users/{userId}/role", UUID.randomUUID())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new UpdateUserRoleRequest(UserRole.ADMIN)))
+                .header("Authorization", bearer(adminAccount)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateRole_invalidBody_returnsBadRequest() throws Exception {
+        mockMvc.perform(post("/admin/users/{userId}/role", userAccount.getUserId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}")
+                .header("Authorization", bearer(adminAccount)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void updateBanned_blocksUser() throws Exception {
-        mockMvc.perform(post("/admin/users/{userId}/banned", Objects.requireNonNull(userAccount.getUserId()))
-                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
-                .content(Objects.requireNonNull(
-                        objectMapper.writeValueAsString(new UpdateUserBannedRequest(true))))
+        mockMvc.perform(post("/admin/users/{userId}/banned", userAccount.getUserId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new UpdateUserBannedRequest(true)))
                 .header("Authorization", bearer(adminAccount)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.banned").value(true));
 
-        UserAccount reloaded = userAccountRepository.findById(Objects.requireNonNull(userAccount.getUserId()))
-                .orElseThrow();
+        UserAccount reloaded = userAccountRepository.findById(userAccount.getUserId()).orElseThrow();
         assertThat(reloaded.isBanned()).isTrue();
     }
 
-    private String bearer(UserAccount account) {
-        return "Bearer " + jwtService.generateToken(account).token();
+    @Test
+    void updateBanned_asNonAdmin_isForbidden() throws Exception {
+        mockMvc.perform(post("/admin/users/{userId}/banned", userAccount.getUserId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new UpdateUserBannedRequest(true)))
+                .header("Authorization", bearer(userAccount)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void updateBanned_userNotFound_returnsNotFound() throws Exception {
+        mockMvc.perform(post("/admin/users/{userId}/banned", UUID.randomUUID())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new UpdateUserBannedRequest(true)))
+                .header("Authorization", bearer(adminAccount)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateBanned_invalidBody_returnsBadRequest() throws Exception {
+        mockMvc.perform(post("/admin/users/{userId}/banned", userAccount.getUserId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}")
+                .header("Authorization", bearer(adminAccount)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void listUsers_directCall_withoutPrincipal_returnsAllUsers() {
+        List<AdminUserResponse> result = adminUserController.listOtherUsers(null);
+
+        assertThat(result).hasSize(2);
     }
 }
