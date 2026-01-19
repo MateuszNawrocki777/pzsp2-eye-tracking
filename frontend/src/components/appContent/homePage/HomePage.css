@@ -9,14 +9,14 @@
 
 .home-content-container {
   height: 80%;
-  width: 80%;
+  width: 83.1%;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 20px;
   background-color: #353941;
   border-radius: 8px;
-  padding: 40px;
+  padding: 20px;
   overflow-y: hidden;
 }
 

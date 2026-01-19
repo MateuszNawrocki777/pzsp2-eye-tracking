@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import getTestsCall from "../../../services/api/getTestsCall";
+
+import ImageThumbnail from "../../thumbnails/ImageThumbnail";
+import ThumbnailWithContent from "../../thumbnails/ThumbnailWithContent";
 
 import "./MyTestsPage.css";
 
@@ -8,21 +13,22 @@ export default function MyTestsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // useEffect(() => {
-  //   async function loadTests() {
-  //     try {
-  //       const response = await getTestsCall();
-  //       setTests(response.data);
-  //     } catch (e) {
-  //       console.error("Failed to load tests", e);
-  //       setError(e);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
+  useEffect(() => {
+    async function loadTests() {
+      try {
+        const response = await getTestsCall();
+        console.log("Loaded tests:", response.data);
+        setTests(response.data);
+      } catch (e) {
+        console.error("Failed to load tests", e);
+        setError(e);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  //   loadTests();
-  // }, []);
+    loadTests();
+  }, []);
 
   function MyTestsContent() {
     if (loading) {
@@ -38,14 +44,16 @@ export default function MyTestsPage() {
     }
 
     return (
-      <ul>
+      <div className="my-tests-list">
         {tests.map((test) => (
-          <li key={test.id}>
-            <img src={test.firstImageLink} alt={test.title} width={100} />
-            {test.title}
-          </li>
+          <MyTestCard
+            key={test.id}
+            id={test.id}
+            title={test.title}
+            firstImageLink={test.firstImageLink}
+          />
         ))}
-      </ul>
+      </div>
     );
   }
 
@@ -56,5 +64,27 @@ export default function MyTestsPage() {
         <MyTestsContent />
       </div>
     </div>
+  );
+}
+
+
+function MyTestCard({ id, title, firstImageLink }) {
+  const navigate = useNavigate();
+
+  const thumbnail = (<ImageThumbnail image={firstImageLink} alt={title} />)
+
+  const content = (
+    <>
+      <div className="my-tests-test-title">{title}</div>
+      <button className="my-tests-run-button" onClick={() => navigate(`/run-test/my/${id}`)}>Run</button>
+      <button onClick={() => navigate(`/myTests/${id}`)}>Results</button>
+    </>
+  );
+
+  return (
+    <ThumbnailWithContent
+      image={thumbnail}>
+      {content}
+    </ThumbnailWithContent>
   );
 }
