@@ -61,6 +61,7 @@ export default function TestDetailsPage() {
     async function loadMainHeatmap() {
       try {
         const response = await getMainHeatmapCall(testId);
+        console.log("Main heatmap data:", response.data);
         setMainHeatmap(response.data.heatmaps);
       } catch (e) {
         console.error("Failed to load main heatmap", e);
@@ -96,7 +97,7 @@ export default function TestDetailsPage() {
       {popupImageIndex !== null && (
         <HeatmapPopup
           image={images[popupImageIndex]}
-          points={mainHeatmap[popupImageIndex]}
+          points={mainHeatmap[popupImageIndex].map(({x, y, val}) => [x/384, y/216, val])}  // TODO: replace 384 and 216 with 1
           onClose={() => setPopupImageIndex(null)}
         />
       )}
@@ -120,7 +121,7 @@ export default function TestDetailsPage() {
           />
           <label htmlFor="displayGaze"> Display Gaze Tracking </label>
         </div>
-        <div className="test-details-control-checkbox">
+        <div className="test-details-control-checkbox" style={{ display: "none"}}>
           <input
             type="checkbox"
             id="displayTimeLeft"
@@ -141,7 +142,7 @@ export default function TestDetailsPage() {
           />
           <label htmlFor="imageTime"> seconds per image </label>
         </div>
-        <div className="test-details-control-checkbox">
+        <div className="test-details-control-checkbox" style={{ display: "none"}}>
           <input
             type="checkbox"
             id="randomizeImages"

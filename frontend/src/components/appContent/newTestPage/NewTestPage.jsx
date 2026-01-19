@@ -199,7 +199,7 @@ export default function NewTestPage() {
           />
           <label htmlFor="displayGaze"> Display Gaze Tracking </label>
         </div>
-        <div className="new-test-control-checkbox">
+        <div className="new-test-control-checkbox" style={{ display: "none"}}>
           <input
             type="checkbox"
             id="displayTimeLeft"
@@ -222,7 +222,7 @@ export default function NewTestPage() {
           />
           <label htmlFor="imageTime"> seconds per image </label>
         </div>
-        <div className="new-test-control-checkbox">
+        <div className="new-test-control-checkbox" style={{ display: "none"}}>
           <input
             type="checkbox"
             id="randomizeImages"

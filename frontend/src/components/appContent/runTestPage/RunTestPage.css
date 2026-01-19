@@ -12,7 +12,6 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    justify-content: space-between;
     gap: 20px;
     background-color: #353941;
     border-radius: 8px;
@@ -35,4 +34,44 @@
 
 .run-test-run-button {
     background-color: #5F85DB;
+}
+
+.run-test-control-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    flex: 1;
+}
+
+.run-test-submit-results-tile {
+    background-color: #26282B;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    text-align: stretch;
+    justify-content: space-between;
+    color: #FFFFFF;
+    width: 30%;
+}
+
+.run-test-submit-results-tile h2 {
+    margin: 0;
+    text-align: center;
+}
+
+.run-test-submit-results-tile p {
+    text-align: center;
+}
+
+.run-test-submit-results-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.run-test-submit-results-button {
+    background-color: #5F85DB;
+    margin-top: 5px;
 }
