@@ -1,5 +1,6 @@
 package org.pzsp2.eye_tracking.storage.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -74,10 +75,10 @@ public class TestDetailsDto {
   }
 
   public List<String> getFileLinks() {
-    return fileLinks;
+    return fileLinks == null ? null : new ArrayList<>(fileLinks);
   }
 
   public void setFileLinks(List<String> fileLinks) {
-    this.fileLinks = fileLinks;
+    this.fileLinks = fileLinks == null ? null : new ArrayList<>(fileLinks);
   }
 }
