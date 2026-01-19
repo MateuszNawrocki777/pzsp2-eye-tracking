@@ -1,10 +1,13 @@
 import { useRef, useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 
 import { useNewTest } from '../../../hooks/newTestContext'
 
+import LoadingButton from '../../loadingButton/LoadingButton';
+
 import getTestCall from '../../../services/api/getTestCall';
 import getOnlineTestCall from '../../../services/api/getOnlineTestCall';
+import submitStudyCall from '../../../services/api/submitStudyCall';
 
 import TestResultImages from '../../testResultImages/TestResultImages';
 import HeatmapPopup from '../../heatmap/HeatmapPopup';
@@ -92,6 +95,9 @@ export default function RunTestPage({ source }) {
                 ) : (
                     <>
                         <TestResultImages images={images} setIndex={(index) => setPopupImageIndex(index)} />
+                        <div className="run-test-control-container">
+                            {source !== 'local' && <SubmitTestResultsTile />}
+                        </div>
                     </>
                 )}
             </div>
@@ -135,4 +141,33 @@ export default function RunTestPage({ source }) {
         }
 
     };
+
+    function SubmitTestResultsTile() {
+        const testSubmitionNameInputRef = useRef(null);
+
+        return (
+            <div className="run-test-submit-results-tile">
+                <div>
+                    <h2>Submit Results</h2>
+                    <p>Submit your test results to the server.</p>
+                </div>
+                <div className="run-test-submit-results-form">
+                    <input
+                        type="text"
+                        placeholder="Enter test submission name"
+                        ref={testSubmitionNameInputRef}
+                    />
+                    <LoadingButton
+                        className="run-test-submit-results-button"
+                        onClick={() => {
+                            const submissionName = testSubmitionNameInputRef.current.value;
+                            submitStudyCall(testId, submissionName, results)
+                        }}
+                    >
+                        Submit
+                    </LoadingButton>
+                </div>
+            </div>
+        );
+    }
 }
