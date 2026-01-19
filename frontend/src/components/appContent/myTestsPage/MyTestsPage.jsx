@@ -75,7 +75,7 @@ function MyTestCard({ id, title, firstImageLink }) {
   const content = (
     <>
       <div className="my-tests-test-title">{title}</div>
-      <button className="my-tests-run-button" onClick={() => navigate(`/run-test/my/${id}`)}>Run</button>
+      <button className="my-tests-run-button" onClick={() => navigate(`/runTest/my/${id}`)}>Run</button>
       <button onClick={() => navigate(`/myTests/${id}`)}>Results</button>
     </>
   );

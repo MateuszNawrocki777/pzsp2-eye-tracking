@@ -74,7 +74,6 @@
         if (!data || !data.images) return;
 
         images = data.images;
-        images = images.map((img) => URL.createObjectURL(img));
 
         enableDisplayGazeTracking = data.enableDisplayGazeTracking;
         enableDisplayTimeLeft = data.enableDisplayTimeLeft;

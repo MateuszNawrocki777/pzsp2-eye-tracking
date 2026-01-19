@@ -83,7 +83,7 @@ export default function NewTestPage() {
     formData.append("dispTimeLeft", enableDisplayTimeLeft);
     formData.append("timePerImageMs", secondsPerImage);
     formData.append("randomizeOrder", randomizeImageOrder);
-    
+
     const response = await createTestCall(formData);
     const testId = response.data;
 
@@ -301,7 +301,7 @@ export default function NewTestPage() {
           >
             Save Test
           </LoadingButton>
-          <button onClick={() => navigate("/runTest")}>Run Test</button>
+          <button onClick={() => navigate("/runTest/local")}>Run Test</button>
         </div>
       </div>
     );
