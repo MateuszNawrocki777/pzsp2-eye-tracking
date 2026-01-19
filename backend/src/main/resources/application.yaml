@@ -13,6 +13,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 app:
   security:
@@ -22,5 +26,8 @@ app:
       issuer: eye-tracking-api
       expiration-minutes: 60
     admin:
-      email: ${APP_ADMIN_EMAIL}
-      password: ${APP_ADMIN_PASSWORD}
+      email: ${APP_ADMIN_EMAIL:admin@eye-tracking.local}
+      password: ${APP_ADMIN_PASSWORD:ChangeMeAdmin123!}
+
+file:
+  upload-dir: /app/uploads
