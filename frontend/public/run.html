@@ -2,7 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>EyeGestures Test</title>
+    <title>EyeTracking Test</title>
+    <link rel="icon" type="image/x-icon" href="/logo.png">
     <link rel="stylesheet" href="https://eyegestures.com/eyegestures.css" />
     <script src="https://www.lactame.com/lib/ml/6.0.0/ml.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
@@ -11,14 +12,31 @@
     <style>
       body {
         margin: 0;
-        background: white;
+        background-color: #26282B;
         overflow: hidden;
+
+        font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+        line-height: 1.5;
+        font-weight: 400;
       }
       #displayImage {
         width: 100vw;
         height: 100vh;
         object-fit: contain;
-        background-color: white;
+        background-color: #26282B;
+      }
+      #user-message {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 2em;
+        z-index: 1000;
       }
     </style>
   </head>
@@ -31,59 +49,110 @@
       autoplay
       style="display: none"
     ></video>
-    <img id="displayImage" />
+    <img id="displayImage" src="transparent.png" />
 
     <div id="status" style="display: none">Initializing...</div>
     <div id="error" style="display: none"></div>
+    <div id="user-message"></div>
 
     <script>
       let images = [];
-      let time = 5; // domyślnie 5 sekund
+      let gazePoints = [];
       let index = 0;
       let calibrationFinished = false;
+
+      let secondsPerImage = 5;
+      let enableDisplayGazeTracking = true;
+      let enableDisplayTimeLeft = false;
+      let randomizeImageOrder = false;
+
+      let lastCalibCursorLocation = null;
+      let calibrationPointsCounter = 0;
 
       window.addEventListener("message", (event) => {
         const data = event.data;
         if (!data || !data.images) return;
 
         images = data.images;
-        time = data.time || 5;
+        images = images.map((img) => URL.createObjectURL(img));
+
+        enableDisplayGazeTracking = data.enableDisplayGazeTracking;
+        enableDisplayTimeLeft = data.enableDisplayTimeLeft;
+        secondsPerImage = data.secondsPerImage;
+        randomizeImageOrder = data.randomizeImageOrder;
         index = 0;
 
         if (images.length > 0 && calibrationFinished) startSlideshow();
       });
 
+      if (window.opener) {
+        window.opener.postMessage({ type: "getImages" }, window.location.origin);
+        showMessage("Please wait, loading images...");
+      }
+
       function startSlideshow() {
-        if (index >= images.length) return;
+        showMessage("");
+        if (index >= images.length)
+        {
+          finishSlideshow();
+          return;
+        }
         document.getElementById("displayImage").src = images[index];
 
         setTimeout(() => {
           index++;
           startSlideshow();
-        }, time * 1000);
+        }, secondsPerImage * 1000);
+      }
+
+      function finishSlideshow() {
+        if (window.opener) {
+          window.opener.postMessage(
+            { type: "postResults", results: gazePoints },
+            window.location.origin
+          );
+        }
+        showMessage("Test finished. You can close this window now.");
+        document.getElementById("displayImage").style.display = "none";
       }
 
       function onPoint(point, calibration) {
-        console.log("Point:", point, "Calibration:", calibration);
+        // console.log("Point:", point[0]/window.innerWidth, " ", point[1]/window.innerHeight, "Calibration:", calibration);
 
         if (!calibration && !calibrationFinished) {
           calibrationFinished = true;
           if (images.length > 0) startSlideshow();
         }
 
-        if (window.opener) {
-          window.opener.postMessage(
-            { point, calibration },
-            window.location.origin
+        let calib_cursor_pos = document.getElementById("calib_cursor").style.top + document.getElementById("calib_cursor").style.left;
+        if (lastCalibCursorLocation !== calib_cursor_pos)
+        {
+          lastCalibCursorLocation = calib_cursor_pos;
+          calibrationPointsCounter++;
+          showMessage(
+            `Follow the center of the red circle with your eyes to calibrate: ${calibrationPointsCounter}/25`
           );
         }
+
+        if (!calibration) gazePoints.push([point[0] / window.innerWidth, point[1] / window.innerHeight]);
       }
 
       window.addEventListener("load", () => {
         const gestures = new EyeGestures("video", onPoint);
-        gestures.visible();
+        // check
+        if (enableDisplayGazeTracking) {
+          gestures.visible();
+        } else {
+          gestures.invisible();
+        }
+        // gestures.invisible();
         gestures.start();
       });
+
+      function showMessage(message) {
+        const messageDiv = document.getElementById("user-message");
+        messageDiv.innerText = message;
+      }
     </script>
   </body>
 </html>

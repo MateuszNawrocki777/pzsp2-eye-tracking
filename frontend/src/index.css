@@ -31,6 +31,7 @@ button,
 input[type="text"],
 input[type="password"],
 input[type="email"],
+input[type="date"],
 input[type="number"] {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -46,6 +47,7 @@ button:hover,
 input[type="text"]:hover,
 input[type="password"]:hover,
 input[type="email"]:hover,
+input[type="date"]:hover,
 input[type="number"]:hover {
   border-color: #90B8F8;
 }
