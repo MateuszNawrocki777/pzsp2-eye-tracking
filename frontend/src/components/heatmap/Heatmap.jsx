@@ -34,6 +34,9 @@ export default function Heatmap({ image, points }) {
         const pointsValuesSum = points.reduce((sum, p) => sum + p[2], 0);
         heat.max(pointsValuesSum * heatmapValueMultiplier);
 
+        console.log("Heatmap points:", points);
+        console.log("Heatmap max value:", pointsValuesSum * heatmapValueMultiplier);
+
         const data = points.map(([x, y, val]) => [
             x * rect.width,
             y * rect.height,

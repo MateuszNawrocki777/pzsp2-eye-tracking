@@ -42,7 +42,7 @@ export default function RunTestPage({ source }) {
     }
 
     const windowRef = useRef(null);
-    const [results, setResults] = useState([[0.3, 0.5], [0.6, 0.7]]); // For testing purposes, replace with null to disable
+    const [results, setResults] = useState(null);
 
     useEffect(() => {
         if (source === 'local') {
@@ -104,7 +104,7 @@ export default function RunTestPage({ source }) {
             {popupImageIndex !== null && (
                 <HeatmapPopup
                     image={images[popupImageIndex]}
-                    points={results.map(([x, y]) => [x, y, 1])}
+                    points={results[popupImageIndex].map(([x, y]) => [x, y, 1])}
                     onClose={() => setPopupImageIndex(null)}
                 />
             )}
@@ -144,6 +144,7 @@ export default function RunTestPage({ source }) {
 
     function SubmitTestResultsTile() {
         const testSubmitionNameInputRef = useRef(null);
+        const navigate = useNavigate();
 
         return (
             <div className="run-test-submit-results-tile">
@@ -161,7 +162,8 @@ export default function RunTestPage({ source }) {
                         className="run-test-submit-results-button"
                         onClick={() => {
                             const submissionName = testSubmitionNameInputRef.current.value;
-                            submitStudyCall(testId, submissionName, results)
+                            submitStudyCall(testId, submissionName, results);
+                            navigate('/');
                         }}
                     >
                         Submit

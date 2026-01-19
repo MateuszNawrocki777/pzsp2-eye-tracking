@@ -58,6 +58,7 @@
     <script>
       let images = [];
       let gazePoints = [];
+      let results = [];
       let index = 0;
       let calibrationFinished = false;
 
@@ -99,6 +100,8 @@
         document.getElementById("displayImage").src = images[index];
 
         setTimeout(() => {
+          results.push(gazePoints);
+          gazePoints = [];
           index++;
           startSlideshow();
         }, secondsPerImage * 1000);
@@ -107,7 +110,7 @@
       function finishSlideshow() {
         if (window.opener) {
           window.opener.postMessage(
-            { type: "postResults", results: gazePoints },
+            { type: "postResults", results },
             window.location.origin
           );
         }
