@@ -178,7 +178,6 @@ class TestControllerTest {
     @Test
     void downloadFile_returnsFileContents() throws Exception {
 
-        // create physical temp file
         Path p = Files.createTempFile("dl-test", ".txt");
         Files.write(p, "test".getBytes());
 
@@ -214,5 +213,75 @@ class TestControllerTest {
 
         UUID id = Objects.requireNonNull(study.getStudyId());
         assertTrue(studyRepository.findById(id).isEmpty());
+    }
+
+    @Test
+    void createTest_unauthenticated_returns401() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("files", "test.txt", "text/plain", "content".getBytes());
+
+        mockMvc.perform(multipart("/api/tests").file(file))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void createTest_invalidJsonSettings_returns400() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("files", "test.txt", "text/plain", "content".getBytes());
+
+        MockMultipartFile settings = new MockMultipartFile(
+                "settings", "", "application/json", "{ \"title\": ".getBytes());
+
+        mockMvc.perform(multipart("/api/tests")
+                .file(file)
+                .file(settings)
+                .header("Authorization", bearer(owner)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getTestDetails_owner_returnsDetails() throws Exception {
+        Study study = new Study();
+        study.setTitle("DetailsTest");
+        study.setResearcherId(owner.getUserId());
+        study.setSettings("{\"dispGazeTracking\":true}");
+        study = studyRepository.save(study);
+
+        mockMvc.perform(get("/api/tests/" + study.getStudyId())
+                .header("Authorization", bearer(owner)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("DetailsTest"))
+                .andExpect(jsonPath("$.dispGazeTracking").value(true));
+    }
+
+    @Test
+    void getTestDetails_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get("/api/tests/" + UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void updateTest_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(put("/api/tests/" + UUID.randomUUID())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void deleteTest_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(delete("/api/tests/" + UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void createTest_jsonSettingsIsWhitespace_ignoresIt() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("files", "a.txt", "text/plain", "content".getBytes());
+        MockMultipartFile settings = new MockMultipartFile(
+                "settings", "", "application/json", "   ".getBytes());
+
+        mockMvc.perform(multipart("/api/tests")
+                .file(file)
+                .file(settings)
+                .header("Authorization", bearer(owner)))
+                .andExpect(status().isOk());
     }
 }

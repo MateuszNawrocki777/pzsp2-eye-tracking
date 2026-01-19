@@ -89,13 +89,13 @@ class StudySessionServiceTest {
         ArgumentCaptor<StudySession> sessionCaptor = ArgumentCaptor.forClass(StudySession.class);
         verify(sessionRepository).save(sessionCaptor.capture());
         String sessionJson = sessionCaptor.getValue().getHeatmapsJson();
-        assertTrue(sessionJson.contains("\"x\":0,\"y\":0"), "Sesja powinna mieć punkt w (0,0)");
+        assertTrue(sessionJson.contains("\"x\":0,\"y\":0"), "Session should contain (0,0) point");
 
         ArgumentCaptor<Study> studyCaptor = ArgumentCaptor.forClass(Study.class);
         verify(studyRepository).save(studyCaptor.capture());
         String aggJson = studyCaptor.getValue().getAggregateHeatmapsJson();
 
-        assertTrue(aggJson.contains("\"val\":2.0"), "Agregacja powinna zsumować wartości (1.0 + 1.0 = 2.0)");
+        assertTrue(aggJson.contains("\"val\":2.0"), "Aggregation should sum values (1.0 + 1.0 = 2.0)");
     }
 
     @Test
@@ -388,7 +388,7 @@ class StudySessionServiceTest {
 
         assertNotNull(result);
         assertEquals(sessionId, result.getSessionId());
-        assertNull(result.getHeatmaps(), "Heatmapy powinny być null, jeśli JSON w bazie był null");
+        assertNull(result.getHeatmaps(), "Heatmaps should be null if JSON was null");
     }
 
     @Test
@@ -420,7 +420,7 @@ class StudySessionServiceTest {
 
         String newAggJson = captor.getValue().getAggregateHeatmapsJson();
         assertNotNull(newAggJson);
-        assertTrue(newAggJson.contains("\"val\":1.0"), "Powinno utworzyć nową agregację z wartością 1.0");
+        assertTrue(newAggJson.contains("\"val\":1.0"), "New aggregation should be created with value 1.0");
     }
 
 @Test
@@ -486,7 +486,7 @@ class StudySessionServiceTest {
         verify(sessionRepository).save(captor.capture());
         String json = captor.getValue().getHeatmapsJson();
 
-        assertTrue(json.contains("\"x\":0"), "Ujemne wartości powinny być przycinane do 0");
+        assertTrue(json.contains("\"x\":0"), "Negative values should be truncated to 0");
     }
 
     @Test
