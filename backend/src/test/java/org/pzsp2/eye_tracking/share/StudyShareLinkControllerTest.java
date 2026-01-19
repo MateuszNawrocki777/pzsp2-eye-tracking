@@ -55,6 +55,7 @@ class StudyShareLinkControllerTest {
     private StudySessionRepository sessionRepository;
 
     private UserAccount owner;
+    private UserAccount intruder;
 
     @BeforeEach
     void setUp() {
@@ -65,6 +66,7 @@ class StudyShareLinkControllerTest {
         userAccountRepository.deleteAll();
 
         owner = userAccountRepository.save(new UserAccount(UUID.randomUUID(), "owner@test.local", "pw", UserRole.USER));
+        intruder = userAccountRepository.save(new UserAccount(UUID.randomUUID(), "intruder@test.local", "pw", UserRole.USER));
     }
 
     private String bearer(UserAccount account) {
@@ -143,6 +145,39 @@ class StudyShareLinkControllerTest {
         String accessLink = json.get("access_link").asText();
 
         mockMvc.perform(get("/api/tests/share/" + accessLink))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void createShareLink_unauthorized_returns401() throws Exception {
+        mockMvc.perform(post("/api/tests/" + UUID.randomUUID() + "/share")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void createShareLink_forbidden_whenIntruderTries() throws Exception {
+        Study study = new Study();
+        study.setTitle("Secret Study");
+        study.setResearcherId(owner.getUserId());
+        study.setSettings("{}");
+        study = studyRepository.save(study);
+
+        mockMvc.perform(post("/api/tests/" + study.getStudyId() + "/share")
+                .header("Authorization", bearer(intruder)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void createShareLink_notFound_whenStudyDoesNotExist() throws Exception {
+        mockMvc.perform(post("/api/tests/" + UUID.randomUUID() + "/share")
+                .header("Authorization", bearer(owner)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getShareLink_notFound_whenLinkInvalid() throws Exception {
+        mockMvc.perform(get("/api/tests/share/invalid-uuid-link"))
                 .andExpect(status().isNotFound());
     }
 }
