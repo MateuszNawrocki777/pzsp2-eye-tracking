@@ -4,6 +4,10 @@ import simpleheat from "simpleheat";
 import "./Heatmap.css";
 
 
+const heatmapRadiusMultiplier = 50 / 1800;
+const heatmapValueMultiplier = 0.025;
+
+
 export default function Heatmap({ image, points }) {
     const canvasRef = useRef(null);
 
@@ -15,14 +19,15 @@ export default function Heatmap({ image, points }) {
         canvas.width = rect.width;
         canvas.height = rect.height;
 
-        const radius = 50 * (rect.width / 1800);
+        const radius = rect.width * heatmapRadiusMultiplier;
 
         const heat = simpleheat(canvas);
 
         heat.radius(radius, radius / 2);
-        heat.max(points.length * 0.05);
+        const pointsValuesSum = points.reduce((sum, p) => sum + p[2], 0);
+        heat.max(pointsValuesSum * heatmapValueMultiplier);
 
-        const data = points.map(([x, y]) => [x * rect.width, y * rect.height, 1]);
+        const data = points.map(([x, y, val]) => [x * rect.width, y * rect.height, val]);
 
         heat.data(data);
         heat.draw();

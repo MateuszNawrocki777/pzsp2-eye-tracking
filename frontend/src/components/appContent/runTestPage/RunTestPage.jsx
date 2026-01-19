@@ -25,7 +25,7 @@ export default function RunTestPage() {
             {!results ? (
             <button onClick={handleRun}>Start Test</button>
             ) : (
-                <Heatmap image={images[0]} points={results} />
+                <Heatmap image={images[0]} points={results.map(([x, y]) => [x, y, 1])} />
             )}
         </div>
     )
