@@ -10,13 +10,13 @@ import ImageThumbnailWithButtons from "../../thumbnails/ImageThumbnailWithButton
 import PopupMessage from "../../popupMessage/PopupMessage";
 
 import createTestCall from "../../../services/api/createTestCall";
+import LoadingButton from "../../loadingButton/LoadingButton";
 
 import "./NewTestPage.css";
 
+
 export default function NewTestPage() {
   const navigate = useNavigate();
-
-  const { images, setImages } = useNewTest();
 
   const [showResetPopup, setShowResetPopup] = useState(false);
 
@@ -30,8 +30,8 @@ export default function NewTestPage() {
   const randomizeImagesInputRef = useRef(null);
 
   const {
-    // images,
-    // setImages,
+    images,
+    setImages,
     testName,
     setTestName,
     secondsPerImage,
@@ -49,23 +49,21 @@ export default function NewTestPage() {
     fileInputRef.current.click();
   }
 
-  function handleFileInputChange(event) {
-    const files = Array.from(event.target.files);
-    const newImages = files.map((file) => URL.createObjectURL(file));
-    setImages((prevImages) => [...prevImages, ...newImages]);
-    event.target.value = null;
-  }
   // function handleFileInputChange(event) {
   //   const files = Array.from(event.target.files);
 
   //   const newImages = files.map((file) => ({
   //     file,
-  //     preview: URL.createObjectURL(file),
+  //     // preview: URL.createObjectURL(file),
   //   }));
+  function handleFileInputChange(event) {
+    setImages((prev) => [
+      ...prev,
+      ...Array.from(event.target.files)
+    ]);
 
-  //   setImages((prev) => [...prev, ...newImages]);
-  //   event.target.value = null;
-  // }
+    event.target.value = null;
+  }
 
   function handleRemoveImage(image) {
     setImages((prevImages) => prevImages.filter((img) => img !== image));
@@ -74,26 +72,22 @@ export default function NewTestPage() {
   async function handleCreateTest() {
     const formData = new FormData();
 
-    // images.forEach((img) => {
-    //   formData.append("files", img.file);
-    // });
-
     images.forEach((img) => {
       formData.append("files", img);
     });
 
-    formData.append("testName", testName);
-    formData.append("secondsPerImage", secondsPerImage);
-    formData.append("randomizeImageOrder", randomizeImageOrder);
-    formData.append("enableDisplayGazeTracking", enableDisplayGazeTracking);
-    formData.append("enableDisplayTimeLeft", enableDisplayTimeLeft);
+    formData.append("title", testName);
+    formData.append("description", "example description");
 
-    // Sprawdzenie
-    // for (let pair of formData.entries()) {
-    //   console.log(pair[0], pair[1]);
-    // }
+    formData.append("dispGazeTracking", enableDisplayGazeTracking);
+    formData.append("dispTimeLeft", enableDisplayTimeLeft);
+    formData.append("timePerImageMs", secondsPerImage);
+    formData.append("randomizeOrder", randomizeImageOrder);
+    
+    const response = await createTestCall(formData);
+    const testId = response.data;
 
-    await createTestCall(formData);
+    navigate(`/test/${testId}`);
   }
 
   return (
@@ -105,7 +99,6 @@ export default function NewTestPage() {
         </div>
         <div className="new-test-control-container">
           <Settings />
-          {/* <DataReceiver /> */}
           <FinishTest />
         </div>
         <button
@@ -117,7 +110,7 @@ export default function NewTestPage() {
       </div>
       <input
         type="file"
-        accept=".png,.jpg,.jpeg,.pdf"
+        accept=".png,.jpg,.jpeg,.webp"
         multiple
         ref={fileInputRef}
         onChange={handleFileInputChange}
@@ -147,11 +140,6 @@ export default function NewTestPage() {
 
     const buttons = hovered && (
       <>
-        {/* <button className="new-test-preview-image-button">
-                    <span className="material-symbols-outlined">
-                    visibility
-                    </span>
-                </button> TODO: Make this button functional */}
         <button
           className="new-test-remove-image-button"
           onClick={() => handleRemoveImage(image)}
@@ -163,7 +151,7 @@ export default function NewTestPage() {
 
     return (
       <ThumbnailWithContent
-        image={<ImageThumbnailWithButtons image={image} buttons={buttons} />}
+        image={<ImageThumbnailWithButtons image={URL.createObjectURL(image)} buttons={buttons} />}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       />
@@ -304,7 +292,7 @@ export default function NewTestPage() {
             defaultValue={testName}
             onBlur={() => setTestName(testNameInputRef.current.value)}
           />
-          <button
+          <LoadingButton
             className={`new-test-save-test-button ${
               !isLoggedIn ? "disabled-button" : ""
             }`}
@@ -312,7 +300,7 @@ export default function NewTestPage() {
             onClick={handleCreateTest}
           >
             Save Test
-          </button>
+          </LoadingButton>
           <button onClick={() => navigate("/runTest")}>Run Test</button>
         </div>
       </div>
