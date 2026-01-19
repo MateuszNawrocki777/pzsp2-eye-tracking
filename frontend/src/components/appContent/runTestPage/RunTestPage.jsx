@@ -8,7 +8,16 @@ import './RunTestPage.css'
 
 
 export default function RunTestPage() {
-    const { images } = useNewTest();
+    // const { images } = useNewTest();
+    const {
+        images,
+        enableDisplayGazeTracking,
+        enableDisplayTimeLeft,
+        secondsPerImage,
+        randomizeImageOrder,
+        testName,
+    } = useNewTest();
+
     const windowRef = useRef(null);
     const [results, setResults] = useState(null);
 
@@ -17,8 +26,6 @@ export default function RunTestPage() {
         return () => window.removeEventListener("message", handleMessage);
     }, []);
 
-    {/* TODO: Probably disable the button until images are loaded */}
-    {/* Also, change this so this doesnt always get the local test */}
 
     return (
         <div className="run-test-page-container">
@@ -43,9 +50,14 @@ export default function RunTestPage() {
         switch (event.data.type) {
         case "getImages":
             {
-            const time = 10;
             console.log("Sending images to test window");
-            windowRef.current.postMessage({ images, time }, window.location.origin);
+            windowRef.current.postMessage({ 
+                images, 
+                enableDisplayGazeTracking, 
+                enableDisplayTimeLeft, 
+                secondsPerImage, 
+                randomizeImageOrder 
+            }, window.location.origin);
             }
             break;
         case "postResults":

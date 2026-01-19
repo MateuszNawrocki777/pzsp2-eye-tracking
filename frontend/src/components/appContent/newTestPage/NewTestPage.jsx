@@ -49,15 +49,19 @@ export default function NewTestPage() {
     fileInputRef.current.click();
   }
 
+  // function handleFileInputChange(event) {
+  //   const files = Array.from(event.target.files);
+
+  //   const newImages = files.map((file) => ({
+  //     file,
+  //     // preview: URL.createObjectURL(file),
+  //   }));
   function handleFileInputChange(event) {
-    const files = Array.from(event.target.files);
+    setImages((prev) => [
+      ...prev,
+      ...Array.from(event.target.files)
+    ]);
 
-    const newImages = files.map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-    }));
-
-    setImages((prev) => [...prev, ...newImages]);
     event.target.value = null;
   }
 
@@ -69,7 +73,7 @@ export default function NewTestPage() {
     const formData = new FormData();
 
     images.forEach((img) => {
-      formData.append("files", img.file);
+      formData.append("files", img);
     });
 
     formData.append("title", testName);
@@ -147,7 +151,7 @@ export default function NewTestPage() {
 
     return (
       <ThumbnailWithContent
-        image={<ImageThumbnailWithButtons image={image.preview} buttons={buttons} />}
+        image={<ImageThumbnailWithButtons image={URL.createObjectURL(image)} buttons={buttons} />}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       />

@@ -58,9 +58,13 @@
     <script>
       let images = [];
       let gazePoints = [];
-      let time = 5; // domyślnie 5 sekund
       let index = 0;
       let calibrationFinished = false;
+
+      let secondsPerImage = 5;
+      let enableDisplayGazeTracking = true;
+      let enableDisplayTimeLeft = false;
+      let randomizeImageOrder = false;
 
       let lastCalibCursorLocation = null;
       let calibrationPointsCounter = 0;
@@ -70,7 +74,12 @@
         if (!data || !data.images) return;
 
         images = data.images;
-        time = data.time || 5;
+        images = images.map((img) => URL.createObjectURL(img));
+
+        enableDisplayGazeTracking = data.enableDisplayGazeTracking;
+        enableDisplayTimeLeft = data.enableDisplayTimeLeft;
+        secondsPerImage = data.secondsPerImage;
+        randomizeImageOrder = data.randomizeImageOrder;
         index = 0;
 
         if (images.length > 0 && calibrationFinished) startSlideshow();
@@ -93,7 +102,7 @@
         setTimeout(() => {
           index++;
           startSlideshow();
-        }, time * 1000);
+        }, secondsPerImage * 1000);
       }
 
       function finishSlideshow() {
@@ -130,7 +139,13 @@
 
       window.addEventListener("load", () => {
         const gestures = new EyeGestures("video", onPoint);
-        gestures.visible();
+        // check
+        if (enableDisplayGazeTracking) {
+          gestures.visible();
+        } else {
+          gestures.invisible();
+        }
+        // gestures.invisible();
         gestures.start();
       });
 
