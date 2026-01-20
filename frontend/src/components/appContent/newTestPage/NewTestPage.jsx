@@ -222,7 +222,7 @@ export default function NewTestPage() {
           />
           <label htmlFor="imageTime"> seconds per image </label>
         </div>
-        <div className="new-test-control-checkbox" style={{ display: "none"}}>
+        <div className="new-test-control-checkbox">
           <input
             type="checkbox"
             id="randomizeImages"

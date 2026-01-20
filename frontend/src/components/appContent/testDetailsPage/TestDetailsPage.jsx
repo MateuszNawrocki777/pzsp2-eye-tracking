@@ -188,7 +188,7 @@ export default function TestDetailsPage() {
           />
           <label htmlFor="imageTime"> seconds per image </label>
         </div>
-        <div className="test-details-control-checkbox" style={{ display: "none"}}>
+        <div className="test-details-control-checkbox">
           <input
             type="checkbox"
             id="randomizeImages"
@@ -328,7 +328,12 @@ export default function TestDetailsPage() {
     const date = new Date(study.completed_at);
     return (
       <div className={`test-details-study-item${selectedStudyId === study.session_id ? " selected" : ""}`}
-           onClick={() => setSelectedStudyId(study.session_id)}>
+           onClick={() => {
+              if (selectedStudyId !== study.session_id)
+                setSelectedStudyId(study.session_id)
+              else
+                setSelectedStudyId(null);
+           }}>
         <h3>{study.name}</h3>
         <p>{date.toLocaleString("pl-PL")}</p>
       </div>
