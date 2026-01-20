@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class HeatmapPointDto {
-    private int x;
-    private int y;
-    private double val;
+  private int x;
+  private int y;
+  private double val;
 }

@@ -1,82 +1,94 @@
 package org.pzsp2.eye_tracking.storage.dto;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 class StorageDtoTest {
 
-    @Test
-    void testTestCreateRequest() {
-        TestCreateRequest request = new TestCreateRequest();
-        String title = "New Test";
-        String desc = "Description";
-        Integer time = 5000;
+  @Test
+  void testTestCreateRequest() {
+    TestCreateRequest request = new TestCreateRequest();
+    String title = "New Test";
+    String desc = "Description";
+    Integer time = 5000;
 
-        request.setTitle(title);
-        request.setDescription(desc);
-        request.setDispGazeTracking(true);
-        request.setDispTimeLeft(false);
-        request.setTimePerImageMs(time);
-        request.setRandomizeOrder(true);
+    request.setTitle(title);
+    request.setDescription(desc);
+    request.setDispGazeTracking(true);
+    request.setDispTimeLeft(false);
+    request.setTimePerImageMs(time);
+    request.setRandomizeOrder(true);
 
-        assertEquals(title, request.getTitle());
-        assertEquals(desc, request.getDescription());
-        assertTrue(request.getDispGazeTracking());
-        assertFalse(request.getDispTimeLeft());
-        assertEquals(time, request.getTimePerImageMs());
-        assertTrue(request.getRandomizeOrder());
-    }
+    assertEquals(title, request.getTitle());
+    assertEquals(desc, request.getDescription());
+    assertTrue(request.getDispGazeTracking());
+    assertFalse(request.getDispTimeLeft());
+    assertEquals(time, request.getTimePerImageMs());
+    assertTrue(request.getRandomizeOrder());
 
-    @Test
-    void testTestDetailsDto() {
-        TestDetailsDto dto = new TestDetailsDto();
-        UUID id = UUID.randomUUID();
-        List<String> links = List.of("http://link1.com", "http://link2.com");
+    assertNotNull(request.toString());
+  }
 
-        dto.setId(id);
-        dto.setTitle("Title");
-        dto.setDescription("Desc");
-        dto.setDispGazeTracking(true);
-        dto.setDispTimeLeft(true);
-        dto.setTimePerImageMs(100);
-        dto.setRandomizeOrder(false);
-        dto.setFileLinks(links);
+  @Test
+  void testTestDetailsDto() {
+    TestDetailsDto dto = new TestDetailsDto();
+    UUID id = UUID.randomUUID();
+    List<String> links = new ArrayList<>();
+    links.add("http://link1.com");
+    links.add("http://link2.com");
 
-        assertEquals(id, dto.getId());
-        assertEquals("Title", dto.getTitle());
-        assertEquals("Desc", dto.getDescription());
-        assertTrue(dto.getDispGazeTracking());
-        assertTrue(dto.getDispTimeLeft());
-        assertEquals(100, dto.getTimePerImageMs());
-        assertFalse(dto.getRandomizeOrder());
-        assertEquals(links, dto.getFileLinks());
-        assertEquals(2, dto.getFileLinks().size());
-    }
+    dto.setId(id);
+    dto.setTitle("Title");
+    dto.setDescription("Desc");
+    dto.setDispGazeTracking(true);
+    dto.setDispTimeLeft(true);
+    dto.setTimePerImageMs(100);
+    dto.setRandomizeOrder(false);
+    dto.setFileLinks(links);
 
-    @Test
-    void testTestListItemDto() {
-        UUID id = UUID.randomUUID();
-        String title = "List Item";
-        String link = "http://image.png";
+    assertEquals(id, dto.getId());
+    assertEquals("Title", dto.getTitle());
+    assertEquals("Desc", dto.getDescription());
+    assertTrue(dto.getDispGazeTracking());
+    assertTrue(dto.getDispTimeLeft());
+    assertEquals(100, dto.getTimePerImageMs());
+    assertFalse(dto.getRandomizeOrder());
 
-        TestListItemDto dto = new TestListItemDto(id, title, link);
+    assertEquals(links, dto.getFileLinks());
+    assertNotSame(links, dto.getFileLinks());
 
-        assertEquals(id, dto.getId());
-        assertEquals(title, dto.getTitle());
-        assertEquals(link, dto.getFirstImageLink());
+    dto.setFileLinks(null);
+    assertNull(dto.getFileLinks());
+  }
 
-        UUID newId = UUID.randomUUID();
-        String newTitle = "New Title";
-        String newLink = "http://new-link.com";
+  @Test
+  void testTestListItemDto() {
+    UUID id = UUID.randomUUID();
+    String title = "List Item";
+    String link = "http://image.png";
 
-        dto.setId(newId);
-        dto.setTitle(newTitle);
-        dto.setFirstImageLink(newLink);
+    TestListItemDto dto = new TestListItemDto(id, title, link);
 
-        assertEquals(newId, dto.getId());
-        assertEquals(newTitle, dto.getTitle());
-        assertEquals(newLink, dto.getFirstImageLink());
-    }
+    assertEquals(id, dto.getId());
+    assertEquals(title, dto.getTitle());
+    assertEquals(link, dto.getFirstImageLink());
+
+    UUID newId = UUID.randomUUID();
+    String newTitle = "New Title";
+    String newLink = "http://new-link.com";
+
+    dto.setId(newId);
+    dto.setTitle(newTitle);
+    dto.setFirstImageLink(newLink);
+
+    assertEquals(newId, dto.getId());
+    assertEquals(newTitle, dto.getTitle());
+    assertEquals(newLink, dto.getFirstImageLink());
+
+    assertNotNull(dto.toString());
+  }
 }

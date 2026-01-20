@@ -7,10 +7,9 @@ import lombok.Data;
 @Data
 public class StudyShareLinkCreateRequest {
 
-    @JsonProperty("max_uses")
-    private Integer maxUses;
+  @JsonProperty("max_uses")
+  private Integer maxUses;
 
-    @JsonProperty("expires_at")
-    private LocalDateTime expiresAt;
-
+  @JsonProperty("expires_at")
+  private LocalDateTime expiresAt;
 }

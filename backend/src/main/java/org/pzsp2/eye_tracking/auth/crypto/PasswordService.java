@@ -6,17 +6,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class PasswordService {
 
-    private final PasswordEncoder passwordEncoder;
+  private final PasswordEncoder passwordEncoder;
 
-    public PasswordService(PasswordEncoder passwordEncoder) {
-        this.passwordEncoder = passwordEncoder;
-    }
+  public PasswordService(PasswordEncoder passwordEncoder) {
+    this.passwordEncoder = passwordEncoder;
+  }
 
-    public String hashPassword(String password) {
-        return passwordEncoder.encode(password);
-    }
+  public String hashPassword(String password) {
+    return passwordEncoder.encode(password);
+  }
 
-    public boolean matches(String rawPassword, String encodedPassword) {
-        return passwordEncoder.matches(rawPassword, encodedPassword);
-    }
+  public boolean matches(String rawPassword, String encodedPassword) {
+    return passwordEncoder.matches(rawPassword, encodedPassword);
+  }
 }
