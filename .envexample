@@ -1,0 +1,6 @@
+# Keys that should be present in your .env file:
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+APP_ADMIN_EMAIL=
+APP_ADMIN_PASSWORD=
+JWT_SECRET=
