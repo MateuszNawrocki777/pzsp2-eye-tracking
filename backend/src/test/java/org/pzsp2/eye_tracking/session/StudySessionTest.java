@@ -1,17 +1,15 @@
 package org.pzsp2.eye_tracking.session;
 
-import org.junit.jupiter.api.Test;
-import org.pzsp2.eye_tracking.storage.Study;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import org.pzsp2.eye_tracking.storage.Study;
 
 class StudySessionTest {
 
-    @Test
-    void testStudySessionEntity() {
+    @Test void testStudySessionEntity() {
         StudySession session1 = new StudySession();
         assertNotNull(session1.getCompletedAt(), "message");
 

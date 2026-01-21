@@ -5,32 +5,25 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "STUDIES")
-public class Study {
+@Table(name = "STUDIES") public class Study {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "study_id")
-    private UUID studyId;
+    @Column(name = "study_id") private UUID studyId;
 
-    @Column(name = "researcher_id")
-    private UUID researcherId;
+    @Column(name = "researcher_id") private UUID researcherId;
 
     private String title;
     private String description;
 
-    @Column(columnDefinition = "TEXT")
-    private String settings;
+    @Column(columnDefinition = "TEXT") private String settings;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "created_at") private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(name = "is_active")
-    private Boolean isActive = true;
+    @Column(name = "is_active") private Boolean isActive = true;
 
     @Lob
-    @Column(name = "aggregate_heatmaps_json", columnDefinition = "TEXT")
-    private String aggregateHeatmapsJson;
+    @Column(name = "aggregate_heatmaps_json", columnDefinition = "TEXT") private String aggregateHeatmapsJson;
 
     public UUID getStudyId() {
         return studyId;

@@ -1,18 +1,16 @@
 package org.pzsp2.eye_tracking.session;
 
-import org.junit.jupiter.api.Test;
-import org.pzsp2.eye_tracking.session.dto.*;
-import org.pzsp2.eye_tracking.storage.Study;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import org.pzsp2.eye_tracking.session.dto.*;
+import org.pzsp2.eye_tracking.storage.Study;
 
 class StudySessionModelTest {
-    @Test
-    void testStudySessionEntity() {
+    @Test void testStudySessionEntity() {
         StudySession session1 = new StudySession();
         UUID id = UUID.randomUUID();
         Study study = new Study();
@@ -39,8 +37,7 @@ class StudySessionModelTest {
         assertNotNull(session1.toString());
     }
 
-    @Test
-    void testHeatmapPointDto() {
+    @Test void testHeatmapPointDto() {
         HeatmapPointDto p1 = new HeatmapPointDto(10, 20, 0.5);
         p1.setX(15);
         p1.setY(25);
@@ -56,8 +53,7 @@ class StudySessionModelTest {
         assertNotNull(p1.toString());
     }
 
-    @Test
-    void testCreateRequestDto() {
+    @Test void testCreateRequestDto() {
         StudySessionCreateRequest req1 = new StudySessionCreateRequest();
         UUID studyId = UUID.randomUUID();
         req1.setStudyId(studyId);
@@ -77,8 +73,7 @@ class StudySessionModelTest {
         assertNotNull(req1.toString());
     }
 
-    @Test
-    void testDetailsDto() {
+    @Test void testDetailsDto() {
         StudySessionDetailsDto dto = new StudySessionDetailsDto();
         UUID sessionId = UUID.randomUUID();
         dto.setSessionId(sessionId);

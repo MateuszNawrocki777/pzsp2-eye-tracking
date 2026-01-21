@@ -27,6 +27,7 @@ services:
             - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/eye_tracking_db
             - FILE_UPLOAD_DIR=/app/uploads
             - TZ=Europe/Warsaw
+            - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
         volumes:
             - ./uploads_data:/app/uploads
         depends_on:

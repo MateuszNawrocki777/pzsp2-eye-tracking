@@ -7,11 +7,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 @SpringBootApplication
-@EnableConfigurationProperties({ JwtProperties.class, AdminUserProperties.class })
-public class EyeTrackingApplication {
+@EnableConfigurationProperties({JwtProperties.class,
+                AdminUserProperties.class}) public class EyeTrackingApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(EyeTrackingApplication.class, args);
-	}
-
+    public static void main(String[] args) {
+        SpringApplication.run(EyeTrackingApplication.class, args);
+    }
 }

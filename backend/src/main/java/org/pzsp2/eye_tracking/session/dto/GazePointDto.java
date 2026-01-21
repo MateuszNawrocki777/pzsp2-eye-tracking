@@ -6,8 +6,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-public class GazePointDto {
+@AllArgsConstructor public class GazePointDto {
     private double x;
     private double y;
 }

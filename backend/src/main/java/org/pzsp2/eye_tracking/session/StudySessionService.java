@@ -1,8 +1,16 @@
 package org.pzsp2.eye_tracking.session;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import org.pzsp2.eye_tracking.session.dto.HeatmapPointDto;
 import org.pzsp2.eye_tracking.session.dto.StudySessionCreateRequest;
 import org.pzsp2.eye_tracking.session.dto.StudySessionDetailsDto;
@@ -13,17 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
-import java.time.LocalDateTime;
-
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-
-@Service
-public class StudySessionService {
+@Service public class StudySessionService {
 
     private static final int GRID_WIDTH = 384;
     private static final int GRID_HEIGHT = 216;
@@ -34,24 +32,25 @@ public class StudySessionService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public StudySessionService(StudySessionRepository sessionRepository,
-            StudyRepository studyRepository,
-            StudyMaterialRepository materialRepository) {
+                    StudyRepository studyRepository, StudyMaterialRepository materialRepository) {
         this.sessionRepository = sessionRepository;
         this.studyRepository = studyRepository;
         this.materialRepository = materialRepository;
     }
 
     @Transactional
-    @SuppressWarnings("null")
-    public UUID createSession(StudySessionCreateRequest request) {
+    @SuppressWarnings("null") public UUID createSession(StudySessionCreateRequest request) {
         Study study = studyRepository.findById(Objects.requireNonNull(request.getStudyId()))
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Study does not exist"));
+                        .orElseThrow(() -> new ResponseStatusException(NOT_FOUND,
+                                        "Study does not exist"));
 
         int imageCount = materialRepository.findAllByStudyOrderByDisplayOrderAsc(study).size();
-        int providedCount = request.getPointsPerImage() == null ? 0 : request.getPointsPerImage().size();
+        int providedCount = request.getPointsPerImage() == null
+                        ? 0
+                        : request.getPointsPerImage().size();
         if (providedCount != imageCount) {
             throw new ResponseStatusException(BAD_REQUEST,
-                    "points_per_image size must match number of study images");
+                            "points_per_image size must match number of study images");
         }
 
         List<List<HeatmapPointDto>> heatmaps = buildHeatmaps(request.getPointsPerImage());
@@ -75,10 +74,10 @@ public class StudySessionService {
     }
 
     @Transactional(readOnly = true)
-    @SuppressWarnings("null")
-    public StudySessionDetailsDto getSession(UUID sessionId) {
+    @SuppressWarnings("null") public StudySessionDetailsDto getSession(UUID sessionId) {
         StudySession session = sessionRepository.findById(Objects.requireNonNull(sessionId))
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Session not found"));
+                        .orElseThrow(() -> new ResponseStatusException(NOT_FOUND,
+                                        "Session not found"));
 
         StudySessionDetailsDto dto = new StudySessionDetailsDto();
         dto.setSessionId(session.getSessionId());
@@ -98,10 +97,10 @@ public class StudySessionService {
     }
 
     @Transactional(readOnly = true)
-    @SuppressWarnings("null")
-    public List<StudySessionDetailsDto> getSessionsForStudy(UUID studyId) {
-        Study study = studyRepository.findById(Objects.requireNonNull(studyId))
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Study does not exist"));
+    @SuppressWarnings("null") public List<StudySessionDetailsDto> getSessionsForStudy(
+                    UUID studyId) {
+        Study study = studyRepository.findById(Objects.requireNonNull(studyId)).orElseThrow(
+                        () -> new ResponseStatusException(NOT_FOUND, "Study does not exist"));
 
         List<StudySession> sessions = sessionRepository.findAllByStudy(study);
         List<StudySessionDetailsDto> result = new ArrayList<>();
@@ -117,10 +116,10 @@ public class StudySessionService {
     }
 
     @Transactional(readOnly = true)
-    @SuppressWarnings("null")
-    public List<List<HeatmapPointDto>> getAggregateHeatmapsForStudy(UUID studyId) {
-        Study study = studyRepository.findById(Objects.requireNonNull(studyId))
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Study does not exist"));
+    @SuppressWarnings("null") public List<List<HeatmapPointDto>> getAggregateHeatmapsForStudy(
+                    UUID studyId) {
+        Study study = studyRepository.findById(Objects.requireNonNull(studyId)).orElseThrow(
+                        () -> new ResponseStatusException(NOT_FOUND, "Study does not exist"));
 
         int imageCount = materialRepository.findAllByStudyOrderByDisplayOrderAsc(study).size();
         if (study.getAggregateHeatmapsJson() == null) {
@@ -144,12 +143,13 @@ public class StudySessionService {
     }
 
     private void updateAggregateHeatmaps(Study study, List<List<HeatmapPointDto>> sessionHeatmaps,
-            int imageCount) {
+                    int imageCount) {
         double[][][] aggregateGrid = new double[imageCount][GRID_HEIGHT][GRID_WIDTH];
 
         if (study.getAggregateHeatmapsJson() != null) {
             try {
-                List<List<HeatmapPointDto>> existing = parseHeatmaps(study.getAggregateHeatmapsJson());
+                List<List<HeatmapPointDto>> existing = parseHeatmaps(
+                                study.getAggregateHeatmapsJson());
                 applyHeatmapToGrid(aggregateGrid, existing, imageCount, 1);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException("Failed to parse aggregate heatmaps", e);
@@ -158,7 +158,8 @@ public class StudySessionService {
 
         applyHeatmapToGrid(aggregateGrid, sessionHeatmaps, imageCount, 1);
 
-        List<List<HeatmapPointDto>> aggregated = buildHeatmapsFromGridRaw(aggregateGrid, imageCount);
+        List<List<HeatmapPointDto>> aggregated = buildHeatmapsFromGridRaw(aggregateGrid,
+                        imageCount);
         try {
             study.setAggregateHeatmapsJson(objectMapper.writeValueAsString(aggregated));
         } catch (JsonProcessingException e) {
@@ -167,7 +168,7 @@ public class StudySessionService {
     }
 
     private void applyHeatmapToGrid(double[][][] grid, List<List<HeatmapPointDto>> heatmaps,
-            int imageCount, int weight) {
+                    int imageCount, int weight) {
         if (heatmaps == null) {
             return;
         }
@@ -195,7 +196,8 @@ public class StudySessionService {
         }
     }
 
-    private List<List<HeatmapPointDto>> buildHeatmapsFromGridRaw(double[][][] grid, int imageCount) {
+    private List<List<HeatmapPointDto>> buildHeatmapsFromGridRaw(double[][][] grid,
+                    int imageCount) {
         List<List<HeatmapPointDto>> aggregated = new ArrayList<>();
         for (int i = 0; i < imageCount; i++) {
             List<HeatmapPointDto> heatmap = new ArrayList<>();
@@ -212,7 +214,8 @@ public class StudySessionService {
         return aggregated;
     }
 
-    private List<List<HeatmapPointDto>> normalizeHeatmaps(List<List<HeatmapPointDto>> sums, int imageCount) {
+    private List<List<HeatmapPointDto>> normalizeHeatmaps(List<List<HeatmapPointDto>> sums,
+                    int imageCount) {
         List<List<HeatmapPointDto>> normalized = new ArrayList<>();
         int limit = Math.min(imageCount, sums.size());
         for (int i = 0; i < limit; i++) {

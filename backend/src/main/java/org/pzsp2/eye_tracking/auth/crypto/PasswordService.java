@@ -3,8 +3,7 @@ package org.pzsp2.eye_tracking.auth.crypto;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-@Component
-public class PasswordService {
+@Component public class PasswordService {
 
     private final PasswordEncoder passwordEncoder;
 

@@ -1,7 +1,14 @@
 package org.pzsp2.eye_tracking.session;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -17,38 +24,24 @@ import org.pzsp2.eye_tracking.storage.StudyMaterialRepository;
 import org.pzsp2.eye_tracking.storage.StudyRepository;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+@ExtendWith(MockitoExtension.class) class StudySessionServiceTest {
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+    @Mock private StudySessionRepository sessionRepository;
+    @Mock private StudyRepository studyRepository;
+    @Mock private StudyMaterialRepository materialRepository;
 
-@ExtendWith(MockitoExtension.class)
-class StudySessionServiceTest {
-
-    @Mock
-    private StudySessionRepository sessionRepository;
-    @Mock
-    private StudyRepository studyRepository;
-    @Mock
-    private StudyMaterialRepository materialRepository;
-
-    @InjectMocks
-    private StudySessionService sessionService;
+    @InjectMocks private StudySessionService sessionService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Test
-    void createSession_countMismatch_throwsBadRequest() {
+    @Test void createSession_countMismatch_throwsBadRequest() {
         UUID studyId = UUID.randomUUID();
         Study study = new Study();
         study.setStudyId(studyId);
 
         when(studyRepository.findById(studyId)).thenReturn(Optional.of(study));
         when(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study))
-                .thenReturn(List.of(new StudyMaterial(), new StudyMaterial()));
+                        .thenReturn(List.of(new StudyMaterial(), new StudyMaterial()));
 
         StudySessionCreateRequest request = new StudySessionCreateRequest();
         request.setStudyId(studyId);
@@ -57,19 +50,17 @@ class StudySessionServiceTest {
         assertThrows(ResponseStatusException.class, () -> sessionService.createSession(request));
     }
 
-    @Test
-    void createSession_calculatesCoordinates_and_updatesAggregate() throws JsonProcessingException {
+    @Test void createSession_calculatesCoordinates_and_updatesAggregate()
+                    throws JsonProcessingException {
         UUID studyId = UUID.randomUUID();
         Study study = new Study();
         study.setStudyId(studyId);
-        List<List<HeatmapPointDto>> oldAgg = List.of(
-            List.of(new HeatmapPointDto(0, 0, 1.0))
-        );
+        List<List<HeatmapPointDto>> oldAgg = List.of(List.of(new HeatmapPointDto(0, 0, 1.0)));
         study.setAggregateHeatmapsJson(objectMapper.writeValueAsString(oldAgg));
 
         when(studyRepository.findById(studyId)).thenReturn(Optional.of(study));
         when(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study))
-                .thenReturn(List.of(new StudyMaterial()));
+                        .thenReturn(List.of(new StudyMaterial()));
 
         when(sessionRepository.save(any(StudySession.class))).thenAnswer(i -> {
             StudySession s = i.getArgument(0);
@@ -89,26 +80,24 @@ class StudySessionServiceTest {
         ArgumentCaptor<StudySession> sessionCaptor = ArgumentCaptor.forClass(StudySession.class);
         verify(sessionRepository).save(sessionCaptor.capture());
         String sessionJson = sessionCaptor.getValue().getHeatmapsJson();
-        assertTrue(sessionJson.contains("\"x\":0,\"y\":0"), "Sesja powinna mieć punkt w (0,0)");
+        assertTrue(sessionJson.contains("\"x\":0,\"y\":0"), "Session should contain (0,0) point");
 
         ArgumentCaptor<Study> studyCaptor = ArgumentCaptor.forClass(Study.class);
         verify(studyRepository).save(studyCaptor.capture());
         String aggJson = studyCaptor.getValue().getAggregateHeatmapsJson();
 
-        assertTrue(aggJson.contains("\"val\":2.0"), "Agregacja powinna zsumować wartości (1.0 + 1.0 = 2.0)");
+        assertTrue(aggJson.contains("\"val\":2.0"),
+                        "Aggregation should sum values (1.0 + 1.0 = 2.0)");
     }
 
-    @Test
-    void getSession_parsesJsonCorrectly() throws JsonProcessingException {
+    @Test void getSession_parsesJsonCorrectly() throws JsonProcessingException {
         UUID sessionId = UUID.randomUUID();
         StudySession session = new StudySession();
         session.setSessionId(sessionId);
         session.setStudy(new Study());
         session.setName("Parsed Session");
 
-        List<List<HeatmapPointDto>> storedData = List.of(
-            List.of(new HeatmapPointDto(10, 20, 0.5))
-        );
+        List<List<HeatmapPointDto>> storedData = List.of(List.of(new HeatmapPointDto(10, 20, 0.5)));
         session.setHeatmapsJson(objectMapper.writeValueAsString(storedData));
 
         when(sessionRepository.findById(sessionId)).thenReturn(Optional.of(session));
@@ -121,20 +110,17 @@ class StudySessionServiceTest {
         assertEquals(0.5, result.getHeatmaps().get(0).get(0).getVal());
     }
 
-    @Test
-    void getAggregateHeatmaps_normalizesValues() throws JsonProcessingException {
+    @Test void getAggregateHeatmaps_normalizesValues() throws JsonProcessingException {
         UUID studyId = UUID.randomUUID();
         Study study = new Study();
 
-        List<List<HeatmapPointDto>> rawSums = List.of(
-            List.of(new HeatmapPointDto(50, 50, 10.0))
-        );
+        List<List<HeatmapPointDto>> rawSums = List.of(List.of(new HeatmapPointDto(50, 50, 10.0)));
         study.setAggregateHeatmapsJson(objectMapper.writeValueAsString(rawSums));
 
         when(studyRepository.findById(studyId)).thenReturn(Optional.of(study));
 
         when(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study))
-                .thenReturn(List.of(new StudyMaterial()));
+                        .thenReturn(List.of(new StudyMaterial()));
 
         List<List<HeatmapPointDto>> result = sessionService.getAggregateHeatmapsForStudy(studyId);
 
@@ -145,15 +131,14 @@ class StudySessionServiceTest {
         assertEquals(50, point.getX());
     }
 
-    @Test
-    void getAggregateHeatmaps_handlesEmptyStudy() {
+    @Test void getAggregateHeatmaps_handlesEmptyStudy() {
         UUID studyId = UUID.randomUUID();
         Study study = new Study();
         study.setAggregateHeatmapsJson(null);
 
         when(studyRepository.findById(studyId)).thenReturn(Optional.of(study));
         when(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study))
-                .thenReturn(List.of(new StudyMaterial(), new StudyMaterial()));
+                        .thenReturn(List.of(new StudyMaterial(), new StudyMaterial()));
 
         List<List<HeatmapPointDto>> result = sessionService.getAggregateHeatmapsForStudy(studyId);
 
@@ -162,8 +147,7 @@ class StudySessionServiceTest {
         assertTrue(result.get(1).isEmpty());
     }
 
-    @Test
-    void createSession_studyNotFound_throwsNotFound() {
+    @Test void createSession_studyNotFound_throwsNotFound() {
         UUID studyId = UUID.randomUUID();
         when(studyRepository.findById(studyId)).thenReturn(Optional.empty());
 
@@ -173,32 +157,30 @@ class StudySessionServiceTest {
         assertThrows(ResponseStatusException.class, () -> sessionService.createSession(request));
     }
 
-    @Test
-    void getSession_notFound_throwsNotFound() {
+    @Test void getSession_notFound_throwsNotFound() {
         UUID sessionId = UUID.randomUUID();
         when(sessionRepository.findById(sessionId)).thenReturn(Optional.empty());
 
         assertThrows(ResponseStatusException.class, () -> sessionService.getSession(sessionId));
     }
 
-    @Test
-    void getSessionsForStudy_studyNotFound_throwsNotFound() {
+    @Test void getSessionsForStudy_studyNotFound_throwsNotFound() {
         UUID studyId = UUID.randomUUID();
         when(studyRepository.findById(studyId)).thenReturn(Optional.empty());
 
-        assertThrows(ResponseStatusException.class, () -> sessionService.getSessionsForStudy(studyId));
+        assertThrows(ResponseStatusException.class,
+                        () -> sessionService.getSessionsForStudy(studyId));
     }
 
-    @Test
-    void getAggregateHeatmaps_studyNotFound_throwsNotFound() {
+    @Test void getAggregateHeatmaps_studyNotFound_throwsNotFound() {
         UUID studyId = UUID.randomUUID();
         when(studyRepository.findById(studyId)).thenReturn(Optional.empty());
 
-        assertThrows(ResponseStatusException.class, () -> sessionService.getAggregateHeatmapsForStudy(studyId));
+        assertThrows(ResponseStatusException.class,
+                        () -> sessionService.getAggregateHeatmapsForStudy(studyId));
     }
 
-    @Test
-    void getSessionsForStudy_returnsMappedDtos() {
+    @Test void getSessionsForStudy_returnsMappedDtos() {
         UUID studyId = UUID.randomUUID();
         Study study = new Study();
         study.setStudyId(studyId);
@@ -218,19 +200,16 @@ class StudySessionServiceTest {
         assertEquals(s1.getSessionId(), result.get(0).getSessionId());
     }
 
-    @Test
-    void getAggregateHeatmaps_fillsMissingImages() throws JsonProcessingException {
+    @Test void getAggregateHeatmaps_fillsMissingImages() throws JsonProcessingException {
         UUID studyId = UUID.randomUUID();
         Study study = new Study();
 
-        List<List<HeatmapPointDto>> oldData = List.of(
-            List.of(new HeatmapPointDto(0,0,1.0))
-        );
+        List<List<HeatmapPointDto>> oldData = List.of(List.of(new HeatmapPointDto(0, 0, 1.0)));
         study.setAggregateHeatmapsJson(objectMapper.writeValueAsString(oldData));
 
         when(studyRepository.findById(studyId)).thenReturn(Optional.of(study));
         when(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study))
-                .thenReturn(List.of(new StudyMaterial(), new StudyMaterial()));
+                        .thenReturn(List.of(new StudyMaterial(), new StudyMaterial()));
 
         List<List<HeatmapPointDto>> result = sessionService.getAggregateHeatmapsForStudy(studyId);
 
@@ -239,15 +218,14 @@ class StudySessionServiceTest {
         assertTrue(result.get(1).isEmpty());
     }
 
-    @Test
-    void createSession_handlesNullPointsGracefully() {
+    @Test void createSession_handlesNullPointsGracefully() {
         UUID studyId = UUID.randomUUID();
         Study study = new Study();
         study.setStudyId(studyId);
 
         when(studyRepository.findById(studyId)).thenReturn(Optional.of(study));
         when(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study))
-                .thenReturn(List.of(new StudyMaterial()));
+                        .thenReturn(List.of(new StudyMaterial()));
 
         when(sessionRepository.save(any(StudySession.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -260,15 +238,14 @@ class StudySessionServiceTest {
         assertDoesNotThrow(() -> sessionService.createSession(request));
     }
 
-    @Test
-    void createSession_ignoresMalformedPointsInList() {
+    @Test void createSession_ignoresMalformedPointsInList() {
         UUID studyId = UUID.randomUUID();
         Study study = new Study();
         study.setStudyId(studyId);
 
         when(studyRepository.findById(studyId)).thenReturn(Optional.of(study));
         when(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study))
-                .thenReturn(List.of(new StudyMaterial()));
+                        .thenReturn(List.of(new StudyMaterial()));
 
         when(sessionRepository.save(any(StudySession.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -299,15 +276,13 @@ class StudySessionServiceTest {
         assertTrue(json.contains("\"x\":0,\"y\":0"));
     }
 
-    @Test
-    void createSession_nullPointsList_handlesGracefully() {
+    @Test void createSession_nullPointsList_handlesGracefully() {
         UUID studyId = UUID.randomUUID();
         Study study = new Study();
         study.setStudyId(studyId);
 
         when(studyRepository.findById(studyId)).thenReturn(Optional.of(study));
-        when(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study))
-                .thenReturn(List.of());
+        when(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study)).thenReturn(List.of());
 
         when(sessionRepository.save(any(StudySession.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -318,18 +293,19 @@ class StudySessionServiceTest {
         assertDoesNotThrow(() -> sessionService.createSession(request));
     }
 
-    @Test
-    void updateAggregateHeatmaps_filtersOutInvalidExistingData() throws JsonProcessingException {
+    @Test void updateAggregateHeatmaps_filtersOutInvalidExistingData()
+                    throws JsonProcessingException {
         UUID studyId = UUID.randomUUID();
         Study study = new Study();
         study.setStudyId(studyId);
 
-        String corruptedJson = "[[{\"x\":-1,\"y\":0,\"val\":1.0}, {\"x\":0,\"y\":9999,\"val\":1.0}, {\"x\":0,\"y\":0,\"val\":-5.0}, {\"x\":10,\"y\":10,\"val\":0.0}]]";
+        String corruptedJson = "[[{\"x\":-1,\"y\":0,\"val\":1.0}, {\"x\":0,\"y\":9999,\"val\":1.0},"
+                        + " {\"x\":0,\"y\":0,\"val\":-5.0}, {\"x\":10,\"y\":10,\"val\":0.0}]]";
         study.setAggregateHeatmapsJson(corruptedJson);
 
         when(studyRepository.findById(studyId)).thenReturn(Optional.of(study));
         when(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study))
-                .thenReturn(List.of(new StudyMaterial()));
+                        .thenReturn(List.of(new StudyMaterial()));
 
         when(sessionRepository.save(any(StudySession.class))).thenAnswer(i -> {
             StudySession s = i.getArgument(0);
@@ -351,8 +327,7 @@ class StudySessionServiceTest {
         assertFalse(newJson.contains("\"val\":-5.0"));
     }
 
-    @Test
-    void normalizeHeatmaps_handlesZeroTotal_andNullsInList() throws JsonProcessingException {
+    @Test void normalizeHeatmaps_handlesZeroTotal_andNullsInList() throws JsonProcessingException {
         UUID studyId = UUID.randomUUID();
         Study study = new Study();
 
@@ -365,7 +340,7 @@ class StudySessionServiceTest {
 
         when(studyRepository.findById(studyId)).thenReturn(Optional.of(study));
         when(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study))
-                .thenReturn(List.of(new StudyMaterial()));
+                        .thenReturn(List.of(new StudyMaterial()));
 
         List<List<HeatmapPointDto>> result = sessionService.getAggregateHeatmapsForStudy(studyId);
 
@@ -373,8 +348,7 @@ class StudySessionServiceTest {
         assertTrue(result.get(0).isEmpty());
     }
 
-    @Test
-    void getSession_handlesNullHeatmapsJson() {
+    @Test void getSession_handlesNullHeatmapsJson() {
         UUID sessionId = UUID.randomUUID();
         StudySession session = new StudySession();
         session.setSessionId(sessionId);
@@ -388,11 +362,10 @@ class StudySessionServiceTest {
 
         assertNotNull(result);
         assertEquals(sessionId, result.getSessionId());
-        assertNull(result.getHeatmaps(), "Heatmapy powinny być null, jeśli JSON w bazie był null");
+        assertNull(result.getHeatmaps(), "Heatmaps should be null if JSON was null");
     }
 
-    @Test
-    void createSession_firstSession_createsNewAggregate() {
+    @Test void createSession_firstSession_createsNewAggregate() {
 
         UUID studyId = UUID.randomUUID();
         Study study = new Study();
@@ -401,7 +374,7 @@ class StudySessionServiceTest {
 
         when(studyRepository.findById(studyId)).thenReturn(Optional.of(study));
         when(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study))
-                .thenReturn(List.of(new StudyMaterial()));
+                        .thenReturn(List.of(new StudyMaterial()));
 
         when(sessionRepository.save(any(StudySession.class))).thenAnswer(i -> {
             StudySession s = i.getArgument(0);
@@ -420,11 +393,11 @@ class StudySessionServiceTest {
 
         String newAggJson = captor.getValue().getAggregateHeatmapsJson();
         assertNotNull(newAggJson);
-        assertTrue(newAggJson.contains("\"val\":1.0"), "Powinno utworzyć nową agregację z wartością 1.0");
+        assertTrue(newAggJson.contains("\"val\":1.0"),
+                        "New aggregation should be created with value 1.0");
     }
 
-@Test
-    void createSession_allPointsInvalid_resultsInEmptyHeatmapList() {
+    @Test void createSession_allPointsInvalid_resultsInEmptyHeatmapList() {
 
         UUID studyId = UUID.randomUUID();
         Study study = new Study();
@@ -432,7 +405,7 @@ class StudySessionServiceTest {
 
         when(studyRepository.findById(studyId)).thenReturn(Optional.of(study));
         when(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study))
-                .thenReturn(List.of(new StudyMaterial()));
+                        .thenReturn(List.of(new StudyMaterial()));
 
         when(sessionRepository.save(any(StudySession.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -461,8 +434,7 @@ class StudySessionServiceTest {
         assertEquals("[[]]", json);
     }
 
-    @Test
-    void toGrid_clampsNegativeValues() {
+    @Test void toGrid_clampsNegativeValues() {
 
         UUID studyId = UUID.randomUUID();
         Study study = new Study();
@@ -470,7 +442,7 @@ class StudySessionServiceTest {
 
         when(studyRepository.findById(studyId)).thenReturn(Optional.of(study));
         when(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study))
-                .thenReturn(List.of(new StudyMaterial()));
+                        .thenReturn(List.of(new StudyMaterial()));
 
         when(sessionRepository.save(any(StudySession.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -486,11 +458,10 @@ class StudySessionServiceTest {
         verify(sessionRepository).save(captor.capture());
         String json = captor.getValue().getHeatmapsJson();
 
-        assertTrue(json.contains("\"x\":0"), "Ujemne wartości powinny być przycinane do 0");
+        assertTrue(json.contains("\"x\":0"), "Negative values should be truncated to 0");
     }
 
-    @Test
-    void updateAggregateHeatmaps_handlesNullListInsideJson() throws JsonProcessingException {
+    @Test void updateAggregateHeatmaps_handlesNullListInsideJson() throws JsonProcessingException {
 
         UUID studyId = UUID.randomUUID();
         Study study = new Study();
@@ -498,7 +469,7 @@ class StudySessionServiceTest {
 
         when(studyRepository.findById(studyId)).thenReturn(Optional.of(study));
         when(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study))
-                .thenReturn(List.of(new StudyMaterial(), new StudyMaterial()));
+                        .thenReturn(List.of(new StudyMaterial(), new StudyMaterial()));
 
         when(sessionRepository.save(any(StudySession.class))).thenAnswer(i -> {
             StudySession s = i.getArgument(0);
@@ -513,22 +484,20 @@ class StudySessionServiceTest {
         assertDoesNotThrow(() -> sessionService.createSession(request));
     }
 
-    @Test
-    void normalizeHeatmaps_skipsZeroValues_evenIfTotalIsPositive() throws JsonProcessingException {
+    @Test void normalizeHeatmaps_skipsZeroValues_evenIfTotalIsPositive()
+                    throws JsonProcessingException {
 
         UUID studyId = UUID.randomUUID();
         Study study = new Study();
 
-        List<HeatmapPointDto> points = List.of(
-            new HeatmapPointDto(10, 10, 10.0),
-            new HeatmapPointDto(20, 20, 0.0)
-        );
+        List<HeatmapPointDto> points = List.of(new HeatmapPointDto(10, 10, 10.0),
+                        new HeatmapPointDto(20, 20, 0.0));
         List<List<HeatmapPointDto>> rawData = List.of(points);
         study.setAggregateHeatmapsJson(objectMapper.writeValueAsString(rawData));
 
         when(studyRepository.findById(studyId)).thenReturn(Optional.of(study));
         when(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study))
-                .thenReturn(List.of(new StudyMaterial()));
+                        .thenReturn(List.of(new StudyMaterial()));
 
         List<List<HeatmapPointDto>> result = sessionService.getAggregateHeatmapsForStudy(studyId);
 

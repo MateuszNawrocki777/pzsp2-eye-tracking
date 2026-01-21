@@ -1,16 +1,16 @@
 package org.pzsp2.eye_tracking.session.dto;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 class StudySessionDtoTest {
 
-    @Test
-    void testGazePointDto() {
+    @Test void testGazePointDto() {
         GazePointDto g1 = new GazePointDto(1.5, 2.5);
 
         assertEquals(1.5, g1.getX());
@@ -25,8 +25,7 @@ class StudySessionDtoTest {
         assertNotNull(g1.toString());
     }
 
-    @Test
-    void testHeatmapPointDto() {
+    @Test void testHeatmapPointDto() {
         HeatmapPointDto p1 = new HeatmapPointDto(10, 20, 0.5);
 
         assertEquals(10, p1.getX());
@@ -44,10 +43,9 @@ class StudySessionDtoTest {
         assertNotNull(p1.toString());
     }
 
-    @Test
-    void testStudySessionAggregateHeatmapDto() {
+    @Test void testStudySessionAggregateHeatmapDto() {
         UUID studyId = UUID.randomUUID();
-        List<List<HeatmapPointDto>> heatmaps = List.of();
+        List<List<HeatmapPointDto>> heatmaps = new ArrayList<>();
 
         StudySessionAggregateHeatmapDto agg1 = new StudySessionAggregateHeatmapDto();
         agg1.setStudyId(studyId);
@@ -56,19 +54,21 @@ class StudySessionDtoTest {
         assertEquals(studyId, agg1.getStudyId());
         assertEquals(heatmaps, agg1.getHeatmaps());
 
+        agg1.setHeatmaps(null);
+        assertNull(agg1.getHeatmaps());
+
         StudySessionAggregateHeatmapDto agg2 = new StudySessionAggregateHeatmapDto();
         agg2.setStudyId(studyId);
-        agg2.setHeatmaps(heatmaps);
+        agg2.setHeatmaps(null);
 
         assertEquals(agg1, agg2);
         assertEquals(agg1.hashCode(), agg2.hashCode());
         assertNotNull(agg1.toString());
     }
 
-    @Test
-    void testStudySessionCreateRequest() {
+    @Test void testStudySessionCreateRequest() {
         UUID studyId = UUID.randomUUID();
-        List<List<List<Double>>> points = List.of();
+        List<List<List<Double>>> points = new ArrayList<>();
 
         StudySessionCreateRequest req1 = new StudySessionCreateRequest();
         req1.setStudyId(studyId);
@@ -79,18 +79,22 @@ class StudySessionDtoTest {
         assertEquals("Session 1", req1.getName());
         assertEquals(points, req1.getPointsPerImage());
 
+        assertNotSame(points, req1.getPointsPerImage());
+
+        req1.setPointsPerImage(null);
+        assertNull(req1.getPointsPerImage());
+
         StudySessionCreateRequest req2 = new StudySessionCreateRequest();
         req2.setStudyId(studyId);
         req2.setName("Session 1");
-        req2.setPointsPerImage(points);
+        req2.setPointsPerImage(null);
 
         assertEquals(req1, req2);
         assertEquals(req1.hashCode(), req2.hashCode());
         assertNotNull(req1.toString());
     }
 
-    @Test
-    void testStudySessionCreateResponse() {
+    @Test void testStudySessionCreateResponse() {
         UUID sessionId = UUID.randomUUID();
         StudySessionCreateResponse res1 = new StudySessionCreateResponse(sessionId);
 
@@ -104,12 +108,11 @@ class StudySessionDtoTest {
         assertNotNull(res1.toString());
     }
 
-    @Test
-    void testStudySessionDetailsDto() {
+    @Test void testStudySessionDetailsDto() {
         UUID sessionId = UUID.randomUUID();
         UUID studyId = UUID.randomUUID();
         LocalDateTime now = LocalDateTime.now();
-        List<List<HeatmapPointDto>> heatmaps = List.of();
+        List<List<HeatmapPointDto>> heatmaps = new ArrayList<>();
 
         StudySessionDetailsDto d1 = new StudySessionDetailsDto();
         d1.setSessionId(sessionId);
@@ -124,12 +127,17 @@ class StudySessionDtoTest {
         assertEquals(now, d1.getCompletedAt());
         assertEquals(heatmaps, d1.getHeatmaps());
 
+        assertNotSame(heatmaps, d1.getHeatmaps());
+
+        d1.setHeatmaps(null);
+        assertNull(d1.getHeatmaps());
+
         StudySessionDetailsDto d2 = new StudySessionDetailsDto();
         d2.setSessionId(sessionId);
         d2.setStudyId(studyId);
         d2.setName("Details");
         d2.setCompletedAt(now);
-        d2.setHeatmaps(heatmaps);
+        d2.setHeatmaps(null);
 
         assertEquals(d1, d2);
         assertEquals(d1.hashCode(), d2.hashCode());

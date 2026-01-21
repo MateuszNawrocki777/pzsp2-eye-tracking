@@ -7,33 +7,25 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "app_user")
-public class UserAccount {
+@Table(name = "app_user") public class UserAccount {
 
     @Id
-    @Column(name = "user_id", nullable = false, updatable = false)
-    private UUID userId;
+    @Column(name = "user_id", nullable = false, updatable = false) private UUID userId;
 
-    @Column(name = "email", nullable = false, unique = true)
-    private String email;
+    @Column(name = "email", nullable = false, unique = true) private String email;
 
-    @Column(name = "password_hash", nullable = false, length = 100)
-    private String passwordHash;
+    @Column(name = "password_hash", nullable = false, length = 100) private String passwordHash;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false, length = 32)
-    private UserRole role;
+    @Column(name = "role", nullable = false, length = 32) private UserRole role;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    @Column(name = "created_at", nullable = false, updatable = false) private Instant createdAt;
 
-    @Column(name = "is_banned", nullable = false)
-    private boolean banned;
+    @Column(name = "is_banned", nullable = false) private boolean banned;
 
     protected UserAccount() {
         // for JPA
@@ -47,8 +39,7 @@ public class UserAccount {
         this.banned = false;
     }
 
-    @PrePersist
-    public void onCreate() {
+    @PrePersist public void onCreate() {
         this.createdAt = Instant.now();
     }
 

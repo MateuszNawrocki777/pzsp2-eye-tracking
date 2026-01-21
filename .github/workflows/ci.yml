@@ -35,5 +35,8 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+      - name: Checkstyle
+        run: ./mvnw checkstyle:check
       - name: Run backend tests
         run: ./mvnw -B test
+      

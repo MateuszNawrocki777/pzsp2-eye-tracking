@@ -1,12 +1,23 @@
 package org.pzsp2.eye_tracking.storage;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.web.server.ResponseStatusException;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
-import org.pzsp2.eye_tracking.storage.dto.TestCreateRequest;
-import org.pzsp2.eye_tracking.storage.dto.TestListItemDto;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import jakarta.annotation.PostConstruct;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import org.pzsp2.eye_tracking.share.StudyShareLinkService;
+import org.pzsp2.eye_tracking.storage.dto.TestCreateRequest;
+import org.pzsp2.eye_tracking.storage.dto.TestDetailsDto;
+import org.pzsp2.eye_tracking.storage.dto.TestListItemDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -14,21 +25,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
-import org.pzsp2.eye_tracking.storage.dto.TestDetailsDto;
-
-import java.util.stream.Collectors;
-import java.util.List;
-import com.fasterxml.jackson.core.JsonProcessingException;
-
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.nio.file.*;
-import java.util.UUID;
-import java.util.Objects;
+import org.springframework.web.server.ResponseStatusException;
 
 @SuppressWarnings("null")
 @Service
-public class FileStorageService {
+@SuppressFBWarnings("EI_EXPOSE_REP2") public class FileStorageService {
 
     private final Path fileStorageLocation;
     private final StudyMaterialRepository materialRepository;
@@ -36,17 +37,17 @@ public class FileStorageService {
     private final StudyShareLinkService shareLinkService;
     private final ObjectMapper objectMapper = new ObjectMapper(); // to JSON
 
-    public FileStorageService(
-            @Value("${file.upload-dir}") String uploadDir,
-            StudyMaterialRepository materialRepository,
-            StudyRepository studyRepository,
-            StudyShareLinkService shareLinkService) {
+    public FileStorageService(@Value("${file.upload-dir}") String uploadDir,
+                    StudyMaterialRepository materialRepository, StudyRepository studyRepository,
+                    StudyShareLinkService shareLinkService) {
 
         this.materialRepository = materialRepository;
         this.studyRepository = studyRepository;
         this.shareLinkService = shareLinkService;
         this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+    }
 
+    @PostConstruct public void init() {
         try {
             Files.createDirectories(this.fileStorageLocation);
         } catch (Exception ex) {
@@ -54,28 +55,31 @@ public class FileStorageService {
         }
     }
 
-    @SuppressWarnings("null")
-    public java.util.List<TestListItemDto> getAllTestsForResearcher(UUID researcherId) {
+    @SuppressWarnings("null") public java.util.List<TestListItemDto> getAllTestsForResearcher(
+                    UUID researcherId) {
         return studyRepository.findAll().stream()
-                .filter(study -> researcherId.equals(study.getResearcherId()))
-                .map(study -> {
-                    String imageUrl = materialRepository.findFirstByStudyOrderByDisplayOrderAsc(study)
-                            .map(material -> {
-                                String materialId = Objects.requireNonNull(material.getMaterialId()).toString();
-                                return org.springframework.web.servlet.support.ServletUriComponentsBuilder
-                                        .fromCurrentContextPath()
-                                        .path("/api/tests/files/")
-                                        .path(materialId)
-                                        .toUriString();
-                            })
-                            .orElse(null);
+                        .filter(study -> researcherId.equals(study.getResearcherId()))
+                        .map(study -> {
+                            String imageUrl = materialRepository
+                                            .findFirstByStudyOrderByDisplayOrderAsc(study)
+                                            .map(material -> {
+                                                String materialId = Objects
+                                                                .requireNonNull(material
+                                                                                .getMaterialId())
+                                                                .toString();
+                                                return org.springframework.web.servlet.support.ServletUriComponentsBuilder
+                                                                .fromCurrentContextPath()
+                                                                .path("/api/tests/files/")
+                                                                .path(materialId).toUriString();
+                                            }).orElse(null);
 
-                    return new TestListItemDto(study.getStudyId(), study.getTitle(), imageUrl);
-                }).collect(java.util.stream.Collectors.toList());
+                            return new TestListItemDto(study.getStudyId(), study.getTitle(),
+                                            imageUrl);
+                        }).collect(java.util.stream.Collectors.toList());
     }
 
-    @Transactional
-    public UUID createFullTest(TestCreateRequest request, MultipartFile[] files, UUID researcherId) {
+    @Transactional public UUID createFullTest(TestCreateRequest request, MultipartFile[] files,
+                    UUID researcherId) {
         try {
             Study study = new Study();
             study.setTitle(request.getTitle());
@@ -97,20 +101,21 @@ public class FileStorageService {
         }
     }
 
-    @SuppressWarnings("null")
-    private void storeSingleFile(MultipartFile file, Study study, int order) {
-        String originalFileName = StringUtils
-                .cleanPath(Objects.requireNonNullElse(file.getOriginalFilename(), "unknown"));
+    @SuppressWarnings("null") private void storeSingleFile(MultipartFile file, Study study,
+                    int order) {
+        String originalFileName = StringUtils.cleanPath(
+                        Objects.requireNonNullElse(file.getOriginalFilename(), "unknown"));
 
         String extension = "";
         int i = originalFileName.lastIndexOf('.');
-        if (i > 0)
+        if (i > 0) {
             extension = originalFileName.substring(i);
+        }
         String storedFileName = UUID.randomUUID().toString() + extension;
 
         try {
             Files.copy(file.getInputStream(), this.fileStorageLocation.resolve(storedFileName),
-                    StandardCopyOption.REPLACE_EXISTING);
+                            StandardCopyOption.REPLACE_EXISTING);
 
             StudyMaterial material = new StudyMaterial();
             material.setStudy(study);
@@ -128,40 +133,45 @@ public class FileStorageService {
 
     public Resource loadFileAsResource(UUID fileId) {
         StudyMaterial material = materialRepository.findById(Objects.requireNonNull(fileId))
-                .orElseThrow(() -> new RuntimeException("File does not exist"));
+                        .orElseThrow(() -> new RuntimeException("File does not exist"));
 
         try {
             Path filePath = this.fileStorageLocation.resolve(material.getFilePath()).normalize();
             Resource resource = new UrlResource(Objects.requireNonNull(filePath.toUri()));
-            if (resource.exists())
+            if (resource.exists()) {
                 return resource;
-            else
+            } else {
                 throw new RuntimeException("File not found");
-        } catch (MalformedURLException ex) {
+            }
+        } catch (
+
+        MalformedURLException ex) {
             throw new RuntimeException("Wrong path", ex);
         }
     }
 
     public String getContentType(UUID fileId) {
-        return materialRepository.findById(Objects.requireNonNull(fileId)).map(StudyMaterial::getContentType)
-                .orElse("application/octet-stream");
+        return materialRepository.findById(Objects.requireNonNull(fileId))
+                        .map(StudyMaterial::getContentType).orElse("application/octet-stream");
     }
 
     public String getOriginalName(UUID fileId) {
-        return materialRepository.findById(Objects.requireNonNull(fileId)).map(StudyMaterial::getFileName)
-                .orElse("file");
+        return materialRepository.findById(Objects.requireNonNull(fileId))
+                        .map(StudyMaterial::getFileName).orElse("file");
     }
 
-    @SuppressWarnings("null")
-    public TestDetailsDto getTestDetailsForResearcher(UUID testId, UUID researcherId) {
-        Study study = studyRepository.findById(Objects.requireNonNull(testId)).orElseThrow(
-                () -> new ResponseStatusException(NOT_FOUND, "Couldn't find study with the following ID: " + testId));
+    @SuppressWarnings("null") public TestDetailsDto getTestDetailsForResearcher(UUID testId,
+                    UUID researcherId) {
+        Study study = studyRepository.findById(Objects.requireNonNull(testId))
+                        .orElseThrow(() -> new ResponseStatusException(NOT_FOUND,
+                                        "Couldn't find study with the following ID: " + testId));
 
         if (!researcherId.equals(study.getResearcherId())) {
             throw new ResponseStatusException(FORBIDDEN, "Access denied");
         }
 
-        List<StudyMaterial> materials = materialRepository.findAllByStudyOrderByDisplayOrderAsc(study);
+        List<StudyMaterial> materials = materialRepository
+                        .findAllByStudyOrderByDisplayOrderAsc(study);
 
         TestDetailsDto dto = new TestDetailsDto();
         dto.setId(study.getStudyId());
@@ -169,7 +179,8 @@ public class FileStorageService {
         dto.setDescription(study.getDescription());
 
         try {
-            TestCreateRequest settings = objectMapper.readValue(study.getSettings(), TestCreateRequest.class);
+            TestCreateRequest settings = objectMapper.readValue(study.getSettings(),
+                            TestCreateRequest.class);
             dto.setDispGazeTracking(settings.getDispGazeTracking());
             dto.setDispTimeLeft(settings.getDispTimeLeft());
             dto.setTimePerImageMs(settings.getTimePerImageMs());
@@ -178,30 +189,27 @@ public class FileStorageService {
             throw new RuntimeException("Error occurred while reading settings", e);
         }
 
-        List<String> links = materials.stream()
-                .map(m -> {
-                    String materialId = Objects.requireNonNull(m.getMaterialId()).toString();
-                    return org.springframework.web.servlet.support.ServletUriComponentsBuilder.fromCurrentContextPath()
-                            .path("/api/tests/files/")
-                            .path(materialId)
+        List<String> links = materials.stream().map(m -> {
+            String materialId = Objects.requireNonNull(m.getMaterialId()).toString();
+            return org.springframework.web.servlet.support.ServletUriComponentsBuilder
+                            .fromCurrentContextPath().path("/api/tests/files/").path(materialId)
                             .toUriString();
-                })
-                .collect(Collectors.toList());
+        }).collect(Collectors.toList());
 
         dto.setFileLinks(links);
         return dto;
     }
 
-    @Transactional
-    public void deleteTestForResearcher(UUID testId, UUID researcherId) {
-        Study study = studyRepository.findById(Objects.requireNonNull(testId))
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Test does not exist"));
+    @Transactional public void deleteTestForResearcher(UUID testId, UUID researcherId) {
+        Study study = studyRepository.findById(Objects.requireNonNull(testId)).orElseThrow(
+                        () -> new ResponseStatusException(NOT_FOUND, "Test does not exist"));
 
         if (!researcherId.equals(study.getResearcherId())) {
             throw new ResponseStatusException(FORBIDDEN, "Access denied");
         }
 
-        List<StudyMaterial> materials = materialRepository.findAllByStudyOrderByDisplayOrderAsc(study);
+        List<StudyMaterial> materials = materialRepository
+                        .findAllByStudyOrderByDisplayOrderAsc(study);
 
         for (StudyMaterial material : materials) {
             try {
@@ -217,10 +225,10 @@ public class FileStorageService {
         studyRepository.delete(study);
     }
 
-    @Transactional
-    public void updateTestSettingsForResearcher(UUID testId, TestCreateRequest newSettings, UUID researcherId) {
-        Study study = studyRepository.findById(Objects.requireNonNull(testId))
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Test does not exist"));
+    @Transactional public void updateTestSettingsForResearcher(UUID testId,
+                    TestCreateRequest newSettings, UUID researcherId) {
+        Study study = studyRepository.findById(Objects.requireNonNull(testId)).orElseThrow(
+                        () -> new ResponseStatusException(NOT_FOUND, "Test does not exist"));
 
         if (!researcherId.equals(study.getResearcherId())) {
             throw new ResponseStatusException(FORBIDDEN, "Access denied");
@@ -236,7 +244,8 @@ public class FileStorageService {
         TestCreateRequest mergedSettings = new TestCreateRequest();
         try {
             if (study.getSettings() != null && !study.getSettings().isBlank()) {
-                mergedSettings = objectMapper.readValue(study.getSettings(), TestCreateRequest.class);
+                mergedSettings = objectMapper.readValue(study.getSettings(),
+                                TestCreateRequest.class);
             }
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error occurred while reading settings", e);

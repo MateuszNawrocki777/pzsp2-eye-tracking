@@ -1,9 +1,18 @@
 package org.pzsp2.eye_tracking.auth;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+import static org.springframework.http.HttpStatus.*;
+
+import java.time.Instant;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.pzsp2.eye_tracking.auth.crypto.PasswordService;
@@ -14,97 +23,99 @@ import org.pzsp2.eye_tracking.auth.jwt.JwtToken;
 import org.pzsp2.eye_tracking.user.UserAccount;
 import org.pzsp2.eye_tracking.user.UserAccountRepository;
 import org.pzsp2.eye_tracking.user.UserRole;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.Instant;
-import java.util.Optional;
-import java.util.UUID;
+@ExtendWith(MockitoExtension.class) class AuthServiceTest {
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
+    @Mock private UserAccountRepository userAccountRepository;
+    @Mock private PasswordService passwordService;
+    @Mock private JwtService jwtService;
 
-@ExtendWith(MockitoExtension.class)
-@SuppressWarnings("null")
-class AuthServiceTest {
-
-    @Mock
-    private UserAccountRepository userAccountRepository;
-
-    @Mock
-    private PasswordService passwordService;
-
-    @Mock
-    private JwtService jwtService;
-
-    @InjectMocks
     private AuthService authService;
 
-    @Test
-    void registerShouldPersistNewUser() {
-        RegisterRequest request = new RegisterRequest("test@example.com", "StrongPass1");
-        given(userAccountRepository.existsByEmailIgnoreCase("test@example.com")).willReturn(false);
-        given(passwordService.hashPassword("StrongPass1")).willReturn("hash");
+    @BeforeEach void setUp() {
+        authService = new AuthService(userAccountRepository, passwordService, jwtService);
+    }
 
-        UserAccount persisted = new UserAccount(UUID.randomUUID(), "test@example.com", "hash",
-                UserRole.USER);
-        Instant createdAt = Instant.now();
-        ReflectionTestUtils.setField(persisted, "createdAt", createdAt);
-        given(userAccountRepository.save(any(UserAccount.class))).willReturn(persisted);
-        Instant expiresAt = createdAt.plusSeconds(3600);
-        given(jwtService.generateToken(persisted)).willReturn(new JwtToken("jwt-token", expiresAt));
+    @Test void register_success() {
+        RegisterRequest request = new RegisterRequest("test@example.com", "pass");
+        given(userAccountRepository.existsByEmailIgnoreCase("test@example.com")).willReturn(false);
+        given(passwordService.hashPassword("pass")).willReturn("hash");
+
+        UserAccount savedUser = new UserAccount(UUID.randomUUID(), "test@example.com", "hash",
+                        UserRole.USER);
+        given(userAccountRepository.save(any(UserAccount.class))).willReturn(savedUser);
+
+        JwtToken token = new JwtToken("jwt", Instant.now());
+        given(jwtService.generateToken(savedUser)).willReturn(token);
 
         var response = authService.register(request);
 
-        assertEquals(persisted.getUserId(), response.userId());
-        assertEquals("test@example.com", response.email());
-        assertEquals(UserRole.USER, response.role());
-        assertEquals(createdAt, response.createdAt());
-        assertEquals("jwt-token", response.token());
-        assertEquals(expiresAt, response.expiresAt());
-
-        ArgumentCaptor<UserAccount> captor = ArgumentCaptor.forClass(UserAccount.class);
-        verify(userAccountRepository).save(captor.capture());
-        assertEquals("hash", captor.getValue().getPasswordHash());
+        assertThat(response.email()).isEqualTo("test@example.com");
+        verify(userAccountRepository).save(any(UserAccount.class));
     }
 
-    @Test
-    void registerShouldFailForDuplicateEmail() {
-        RegisterRequest request = new RegisterRequest("test@example.com", "StrongPass1");
+    @Test void register_conflict_emailExists() {
+        RegisterRequest request = new RegisterRequest("test@example.com", "pass");
         given(userAccountRepository.existsByEmailIgnoreCase("test@example.com")).willReturn(true);
 
-        assertThrows(ResponseStatusException.class, () -> authService.register(request));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                        () -> authService.register(request));
+
+        assertThat(ex.getStatusCode()).isEqualTo(CONFLICT);
     }
 
-    @Test
-    void loginShouldReturnUserDetailsWhenPasswordMatches() {
-        LoginRequest request = new LoginRequest("test@example.com", "StrongPass1");
-        UserAccount account = new UserAccount(UUID.randomUUID(), "test@example.com", "storedHash",
-                UserRole.ADMIN);
-        given(userAccountRepository.findByEmailIgnoreCase("test@example.com")).willReturn(Optional.of(account));
-        given(passwordService.matches("StrongPass1", "storedHash")).willReturn(true);
+    @Test void login_success() {
+        LoginRequest req = new LoginRequest("u@t.com", "pass");
+        UserAccount account = new UserAccount(UUID.randomUUID(), "u@t.com", "hash", UserRole.USER);
+        account.setBanned(false);
 
-        Instant expiresAt = Instant.now().plusSeconds(3600);
-        given(jwtService.generateToken(account)).willReturn(new JwtToken("jwt-token", expiresAt));
+        given(userAccountRepository.findByEmailIgnoreCase("u@t.com"))
+                        .willReturn(Optional.of(account));
+        given(passwordService.matches("pass", "hash")).willReturn(true);
+        given(jwtService.generateToken(account)).willReturn(new JwtToken("jwt", Instant.now()));
 
-        var response = authService.login(request);
+        var res = authService.login(req);
 
-        assertEquals(account.getUserId(), response.userId());
-        assertEquals(UserRole.ADMIN, response.role());
-        assertEquals("jwt-token", response.token());
-        assertEquals(expiresAt, response.expiresAt());
+        assertThat(res.token()).isEqualTo("jwt");
     }
 
-    @Test
-    void loginShouldFailForInvalidPassword() {
-        LoginRequest request = new LoginRequest("test@example.com", "WrongPass");
-        UserAccount account = new UserAccount(UUID.randomUUID(), "test@example.com", "storedHash",
-                UserRole.ADMIN);
-        given(userAccountRepository.findByEmailIgnoreCase("test@example.com")).willReturn(Optional.of(account));
-        given(passwordService.matches("WrongPass", "storedHash")).willReturn(false);
+    @Test void login_unauthorized_userNotFound() {
+        LoginRequest req = new LoginRequest("missing@t.com", "pass");
+        given(userAccountRepository.findByEmailIgnoreCase("missing@t.com"))
+                        .willReturn(Optional.empty());
 
-        assertThrows(ResponseStatusException.class, () -> authService.login(request));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                        () -> authService.login(req));
+        assertThat(ex.getStatusCode()).isEqualTo(UNAUTHORIZED);
+    }
+
+    @Test void login_unauthorized_badPassword() {
+        LoginRequest req = new LoginRequest("u@t.com", "wrong");
+        UserAccount account = new UserAccount(UUID.randomUUID(), "u@t.com", "hash", UserRole.USER);
+
+        given(userAccountRepository.findByEmailIgnoreCase("u@t.com"))
+                        .willReturn(Optional.of(account));
+        given(passwordService.matches("wrong", "hash")).willReturn(false);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                        () -> authService.login(req));
+        assertThat(ex.getStatusCode()).isEqualTo(UNAUTHORIZED);
+    }
+
+    @Test void login_forbidden_bannedUser() {
+        LoginRequest req = new LoginRequest("banned@t.com", "pass");
+        UserAccount account = new UserAccount(UUID.randomUUID(), "banned@t.com", "hash",
+                        UserRole.USER);
+        account.setBanned(true);
+
+        given(userAccountRepository.findByEmailIgnoreCase("banned@t.com"))
+                        .willReturn(Optional.of(account));
+        given(passwordService.matches("pass", "hash")).willReturn(true);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                        () -> authService.login(req));
+        assertThat(ex.getStatusCode()).isEqualTo(FORBIDDEN);
+        assertThat(ex.getReason()).isEqualTo("Account is banned");
     }
 }

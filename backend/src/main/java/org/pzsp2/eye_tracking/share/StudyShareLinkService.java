@@ -1,7 +1,15 @@
 package org.pzsp2.eye_tracking.share;
 
+import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import org.pzsp2.eye_tracking.share.dto.StudyShareLinkCreateRequest;
 import org.pzsp2.eye_tracking.share.dto.StudyShareLinkResponse;
 import org.pzsp2.eye_tracking.storage.Study;
@@ -14,17 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import static org.springframework.http.HttpStatus.FORBIDDEN;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-
-@Service
-public class StudyShareLinkService {
+@Service public class StudyShareLinkService {
 
     private final StudyShareLinkRepository shareLinkRepository;
     private final StudyRepository studyRepository;
@@ -32,19 +30,17 @@ public class StudyShareLinkService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public StudyShareLinkService(StudyShareLinkRepository shareLinkRepository,
-            StudyRepository studyRepository,
-            StudyMaterialRepository materialRepository) {
+                    StudyRepository studyRepository, StudyMaterialRepository materialRepository) {
         this.shareLinkRepository = shareLinkRepository;
         this.studyRepository = studyRepository;
         this.materialRepository = materialRepository;
     }
 
     @Transactional
-    @SuppressWarnings("null")
-    public StudyShareLinkResponse createShareLinkForResearcher(UUID testId, UUID researcherId,
-            StudyShareLinkCreateRequest request) {
-        Study study = studyRepository.findById(Objects.requireNonNull(testId))
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Test does not exist"));
+    @SuppressWarnings("null") public StudyShareLinkResponse createShareLinkForResearcher(
+                    UUID testId, UUID researcherId, StudyShareLinkCreateRequest request) {
+        Study study = studyRepository.findById(Objects.requireNonNull(testId)).orElseThrow(
+                        () -> new ResponseStatusException(NOT_FOUND, "Test does not exist"));
 
         if (!researcherId.equals(study.getResearcherId())) {
             throw new ResponseStatusException(FORBIDDEN, "Access denied");
@@ -72,19 +68,17 @@ public class StudyShareLinkService {
         resp.setCreatedAt(saved.getCreatedAt());
         resp.setUseCounter(saved.getUseCounter());
         resp.setAccessUrl(org.springframework.web.servlet.support.ServletUriComponentsBuilder
-                .fromCurrentContextPath()
-                .path("/api/tests/share/")
-                .path(Objects.requireNonNull(saved.getAccessLink()))
-                .toUriString());
+                        .fromCurrentContextPath().path("/api/tests/share/")
+                        .path(Objects.requireNonNull(saved.getAccessLink())).toUriString());
 
         return resp;
     }
 
     @Transactional
-    @SuppressWarnings("null")
-    public TestDetailsDto getTestDetailsForShareLink(String accessLink) {
+    @SuppressWarnings("null") public TestDetailsDto getTestDetailsForShareLink(String accessLink) {
         StudyShareLink link = shareLinkRepository.findById(Objects.requireNonNull(accessLink))
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Share link not found"));
+                        .orElseThrow(() -> new ResponseStatusException(NOT_FOUND,
+                                        "Share link not found"));
 
         LocalDateTime now = LocalDateTime.now();
         System.out.println(now);
@@ -92,7 +86,7 @@ public class StudyShareLinkService {
             throw new ResponseStatusException(NOT_FOUND, "Share link expired");
         }
         if (link.getMaxUses() != null && link.getUseCounter() != null
-                && link.getUseCounter() >= link.getMaxUses()) {
+                        && link.getUseCounter() >= link.getMaxUses()) {
             throw new ResponseStatusException(NOT_FOUND, "Share link exhausted");
         }
 
@@ -100,7 +94,8 @@ public class StudyShareLinkService {
         shareLinkRepository.save(link);
 
         Study study = link.getStudy();
-        List<StudyMaterial> materials = materialRepository.findAllByStudyOrderByDisplayOrderAsc(study);
+        List<StudyMaterial> materials = materialRepository
+                        .findAllByStudyOrderByDisplayOrderAsc(study);
 
         TestDetailsDto dto = new TestDetailsDto();
         dto.setId(study.getStudyId());
@@ -108,7 +103,8 @@ public class StudyShareLinkService {
         dto.setDescription(study.getDescription());
 
         try {
-            TestCreateRequest settings = objectMapper.readValue(study.getSettings(), TestCreateRequest.class);
+            TestCreateRequest settings = objectMapper.readValue(study.getSettings(),
+                            TestCreateRequest.class);
             dto.setDispGazeTracking(settings.getDispGazeTracking());
             dto.setDispTimeLeft(settings.getDispTimeLeft());
             dto.setTimePerImageMs(settings.getTimePerImageMs());
@@ -117,22 +113,19 @@ public class StudyShareLinkService {
             throw new RuntimeException("Error occurred while reading settings", e);
         }
 
-        List<String> links = materials.stream()
-                .map(m -> {
-                    String materialId = Objects.requireNonNull(m.getMaterialId()).toString();
-                    return org.springframework.web.servlet.support.ServletUriComponentsBuilder.fromCurrentContextPath()
-                            .path("/api/tests/files/")
-                            .path(materialId)
+        List<String> links = materials.stream().map(m -> {
+            String materialId = Objects.requireNonNull(m.getMaterialId()).toString();
+            return org.springframework.web.servlet.support.ServletUriComponentsBuilder
+                            .fromCurrentContextPath().path("/api/tests/files/").path(materialId)
                             .toUriString();
-                })
-                .collect(Collectors.toList());
+        }).collect(Collectors.toList());
 
         dto.setFileLinks(links);
         return dto;
     }
 
-    @Transactional
-    public void deleteLinksForStudy(Study study) {
-        shareLinkRepository.deleteAll(Objects.requireNonNull(shareLinkRepository.findAllByStudy(study)));
+    @Transactional public void deleteLinksForStudy(Study study) {
+        shareLinkRepository.deleteAll(
+                        Objects.requireNonNull(shareLinkRepository.findAllByStudy(study)));
     }
 }

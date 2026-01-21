@@ -13,10 +13,27 @@ public class TestListItemDto {
         this.firstImageLink = firstImageLink;
     }
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-    public String getFirstImageLink() { return firstImageLink; }
-    public void setFirstImageLink(String firstImageLink) { this.firstImageLink = firstImageLink; }
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getFirstImageLink() {
+        return firstImageLink;
+    }
+
+    public void setFirstImageLink(String firstImageLink) {
+        this.firstImageLink = firstImageLink;
+    }
 }
