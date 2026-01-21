@@ -19,10 +19,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-@Configuration
-@EnableWebSecurity
-@EnableMethodSecurity
-@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring Bean injection") public class SecurityConfig {
+@Configuration @EnableWebSecurity @EnableMethodSecurity @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring Bean injection") public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -33,7 +30,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
     }
 
     @Bean public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // TODO: change this later
         http.csrf(AbstractHttpConfigurer::disable).cors(Customizer.withDefaults())
                         .authorizeHttpRequests(auth -> auth
                                         .requestMatchers("/api/auth/**", "/v3/api-docs/**",
