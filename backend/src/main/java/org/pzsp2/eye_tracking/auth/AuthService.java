@@ -19,65 +19,53 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-@Service
-public class AuthService {
+@Service public class AuthService {
 
-  private final UserAccountRepository userAccountRepository;
-  private final PasswordService passwordService;
-  private final JwtService jwtService;
+    private final UserAccountRepository userAccountRepository;
+    private final PasswordService passwordService;
+    private final JwtService jwtService;
 
-  public AuthService(
-      UserAccountRepository userAccountRepository,
-      PasswordService passwordService,
-      JwtService jwtService) {
-    this.userAccountRepository = userAccountRepository;
-    this.passwordService = passwordService;
-    this.jwtService = jwtService;
-  }
-
-  @Transactional
-  public RegisterResponse register(RegisterRequest request) {
-    if (userAccountRepository.existsByEmailIgnoreCase(request.email())) {
-      throw new ResponseStatusException(CONFLICT, "Email is already in use");
+    public AuthService(UserAccountRepository userAccountRepository, PasswordService passwordService,
+                    JwtService jwtService) {
+        this.userAccountRepository = userAccountRepository;
+        this.passwordService = passwordService;
+        this.jwtService = jwtService;
     }
 
-    UUID userId = UUID.randomUUID();
-    String hash = passwordService.hashPassword(request.password());
+    @Transactional public RegisterResponse register(RegisterRequest request) {
+        if (userAccountRepository.existsByEmailIgnoreCase(request.email())) {
+            throw new ResponseStatusException(CONFLICT, "Email is already in use");
+        }
 
-    UserAccount userAccount =
-        new UserAccount(userId, request.email().toLowerCase(), hash, UserRole.USER);
+        UUID userId = UUID.randomUUID();
+        String hash = passwordService.hashPassword(request.password());
 
-    UserAccount saved = userAccountRepository.save(userAccount);
-    JwtToken token = jwtService.generateToken(saved);
+        UserAccount userAccount = new UserAccount(userId, request.email().toLowerCase(), hash,
+                        UserRole.USER);
 
-    return new RegisterResponse(
-        saved.getUserId(),
-        saved.getEmail(),
-        saved.getRole(),
-        saved.getCreatedAt(),
-        token.token(),
-        token.expiresAt());
-  }
+        UserAccount saved = userAccountRepository.save(userAccount);
+        JwtToken token = jwtService.generateToken(saved);
 
-  @Transactional(readOnly = true)
-  public LoginResponse login(LoginRequest request) {
-    UserAccount account =
-        userAccountRepository
-            .findByEmailIgnoreCase(request.email())
-            .orElseThrow(
-                () -> new ResponseStatusException(UNAUTHORIZED, "Invalid email or password"));
-
-    if (!passwordService.matches(request.password(), account.getPasswordHash())) {
-      throw new ResponseStatusException(UNAUTHORIZED, "Invalid email or password");
+        return new RegisterResponse(saved.getUserId(), saved.getEmail(), saved.getRole(),
+                        saved.getCreatedAt(), token.token(), token.expiresAt());
     }
 
-    if (account.isBanned()) {
-      throw new ResponseStatusException(FORBIDDEN, "Account is banned");
+    @Transactional(readOnly = true) public LoginResponse login(LoginRequest request) {
+        UserAccount account = userAccountRepository.findByEmailIgnoreCase(request.email())
+                        .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED,
+                                        "Invalid email or password"));
+
+        if (!passwordService.matches(request.password(), account.getPasswordHash())) {
+            throw new ResponseStatusException(UNAUTHORIZED, "Invalid email or password");
+        }
+
+        if (account.isBanned()) {
+            throw new ResponseStatusException(FORBIDDEN, "Account is banned");
+        }
+
+        JwtToken token = jwtService.generateToken(account);
+
+        return new LoginResponse(account.getUserId(), account.getRole(), token.token(),
+                        token.expiresAt());
     }
-
-    JwtToken token = jwtService.generateToken(account);
-
-    return new LoginResponse(
-        account.getUserId(), account.getRole(), token.token(), token.expiresAt());
-  }
 }

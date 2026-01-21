@@ -16,82 +16,74 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
-@RequestMapping("/api/sessions")
-public class StudySessionController {
+@RequestMapping("/api/sessions") public class StudySessionController {
 
-  private final StudySessionService sessionService;
-  private final StudyRepository studyRepository;
+    private final StudySessionService sessionService;
+    private final StudyRepository studyRepository;
 
-  public StudySessionController(
-      StudySessionService sessionService, StudyRepository studyRepository) {
-    this.sessionService = sessionService;
-    this.studyRepository = studyRepository;
-  }
-
-  @PostMapping
-  public ResponseEntity<StudySessionCreateResponse> createSession(
-      @RequestBody StudySessionCreateRequest request) {
-    UUID sessionId = sessionService.createSession(request);
-    return ResponseEntity.ok(new StudySessionCreateResponse(sessionId));
-  }
-
-  @GetMapping("/{sessionId}")
-  public ResponseEntity<StudySessionDetailsDto> getSession(
-      @PathVariable UUID sessionId, @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
-    if (authenticatedUser == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    public StudySessionController(StudySessionService sessionService,
+                    StudyRepository studyRepository) {
+        this.sessionService = sessionService;
+        this.studyRepository = studyRepository;
     }
 
-    StudySessionDetailsDto dto = sessionService.getSession(sessionId);
-    var study =
-        studyRepository
-            .findById(Objects.requireNonNull(dto.getStudyId()))
-            .orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Study does not exist"));
-    if (!authenticatedUser.userId().equals(study.getResearcherId())) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
-    }
-    return ResponseEntity.ok(dto);
-  }
-
-  @GetMapping("/test/{testId}")
-  public ResponseEntity<List<StudySessionDetailsDto>> getSessionsForStudy(
-      @PathVariable UUID testId, @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
-    if (authenticatedUser == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    @PostMapping public ResponseEntity<StudySessionCreateResponse> createSession(
+                    @RequestBody StudySessionCreateRequest request) {
+        UUID sessionId = sessionService.createSession(request);
+        return ResponseEntity.ok(new StudySessionCreateResponse(sessionId));
     }
 
-    var study =
-        studyRepository
-            .findById(Objects.requireNonNull(testId))
-            .orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Study does not exist"));
-    if (!authenticatedUser.userId().equals(study.getResearcherId())) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+    @GetMapping("/{sessionId}") public ResponseEntity<StudySessionDetailsDto> getSession(
+                    @PathVariable UUID sessionId,
+                    @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+        if (authenticatedUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        StudySessionDetailsDto dto = sessionService.getSession(sessionId);
+        var study = studyRepository.findById(Objects.requireNonNull(dto.getStudyId()))
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                        "Study does not exist"));
+        if (!authenticatedUser.userId().equals(study.getResearcherId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+        return ResponseEntity.ok(dto);
     }
 
-    return ResponseEntity.ok(sessionService.getSessionsForStudy(testId));
-  }
+    @GetMapping("/test/{testId}") public ResponseEntity<List<StudySessionDetailsDto>> getSessionsForStudy(
+                    @PathVariable UUID testId,
+                    @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+        if (authenticatedUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
-  @GetMapping("/test/{testId}/heatmap")
-  public ResponseEntity<StudySessionAggregateHeatmapDto> getAggregateHeatmapForStudy(
-      @PathVariable UUID testId, @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
-    if (authenticatedUser == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        var study = studyRepository.findById(Objects.requireNonNull(testId))
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                        "Study does not exist"));
+        if (!authenticatedUser.userId().equals(study.getResearcherId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+
+        return ResponseEntity.ok(sessionService.getSessionsForStudy(testId));
     }
 
-    var study =
-        studyRepository
-            .findById(Objects.requireNonNull(testId))
-            .orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Study does not exist"));
-    if (!authenticatedUser.userId().equals(study.getResearcherId())) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
-    }
+    @GetMapping("/test/{testId}/heatmap") public ResponseEntity<StudySessionAggregateHeatmapDto> getAggregateHeatmapForStudy(
+                    @PathVariable UUID testId,
+                    @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
+        if (authenticatedUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
-    StudySessionAggregateHeatmapDto dto = new StudySessionAggregateHeatmapDto();
-    dto.setStudyId(testId);
-    dto.setHeatmaps(sessionService.getAggregateHeatmapsForStudy(testId));
-    return ResponseEntity.ok(dto);
-  }
+        var study = studyRepository.findById(Objects.requireNonNull(testId))
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                        "Study does not exist"));
+        if (!authenticatedUser.userId().equals(study.getResearcherId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+
+        StudySessionAggregateHeatmapDto dto = new StudySessionAggregateHeatmapDto();
+        dto.setStudyId(testId);
+        dto.setHeatmaps(sessionService.getAggregateHeatmapsForStudy(testId));
+        return ResponseEntity.ok(dto);
+    }
 }

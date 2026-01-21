@@ -26,163 +26,135 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 @SpringBootTest
-@AutoConfigureMockMvc
-class StudyShareLinkControllerTest {
+@AutoConfigureMockMvc class StudyShareLinkControllerTest {
 
-  @Autowired private MockMvc mockMvc;
+    @Autowired private MockMvc mockMvc;
 
-  @Autowired private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
-  @Autowired private UserAccountRepository userAccountRepository;
+    @Autowired private UserAccountRepository userAccountRepository;
 
-  @Autowired private JwtService jwtService;
+    @Autowired private JwtService jwtService;
 
-  @Autowired private StudyRepository studyRepository;
+    @Autowired private StudyRepository studyRepository;
 
-  @Autowired private StudyMaterialRepository materialRepository;
+    @Autowired private StudyMaterialRepository materialRepository;
 
-  @Autowired private StudyShareLinkRepository shareLinkRepository;
+    @Autowired private StudyShareLinkRepository shareLinkRepository;
 
-  @Autowired private StudySessionRepository sessionRepository;
+    @Autowired private StudySessionRepository sessionRepository;
 
-  private UserAccount owner;
-  private UserAccount intruder;
+    private UserAccount owner;
+    private UserAccount intruder;
 
-  @BeforeEach
-  void setUp() {
-    materialRepository.deleteAll();
-    shareLinkRepository.deleteAll();
-    sessionRepository.deleteAll();
-    studyRepository.deleteAll();
-    userAccountRepository.deleteAll();
+    @BeforeEach void setUp() {
+        materialRepository.deleteAll();
+        shareLinkRepository.deleteAll();
+        sessionRepository.deleteAll();
+        studyRepository.deleteAll();
+        userAccountRepository.deleteAll();
 
-    owner =
-        userAccountRepository.save(
-            new UserAccount(UUID.randomUUID(), "owner@test.local", "pw", UserRole.USER));
-    intruder =
-        userAccountRepository.save(
-            new UserAccount(UUID.randomUUID(), "intruder@test.local", "pw", UserRole.USER));
-  }
+        owner = userAccountRepository.save(new UserAccount(UUID.randomUUID(), "owner@test.local",
+                        "pw", UserRole.USER));
+        intruder = userAccountRepository.save(new UserAccount(UUID.randomUUID(),
+                        "intruder@test.local", "pw", UserRole.USER));
+    }
 
-  private String bearer(UserAccount account) {
-    return "Bearer " + jwtService.generateToken(account).token();
-  }
+    private String bearer(UserAccount account) {
+        return "Bearer " + jwtService.generateToken(account).token();
+    }
 
-  @Test
-  void createShareLink_and_access_returnsDetails() throws Exception {
-    Study study = new Study();
-    study.setTitle("ShareTest");
-    study.setResearcherId(owner.getUserId());
-    study.setSettings("{}");
-    study = studyRepository.save(study);
+    @Test void createShareLink_and_access_returnsDetails() throws Exception {
+        Study study = new Study();
+        study.setTitle("ShareTest");
+        study.setResearcherId(owner.getUserId());
+        study.setSettings("{}");
+        study = studyRepository.save(study);
 
-    String payload = "{\"max_uses\":2}";
+        String payload = "{\"max_uses\":2}";
 
-    MvcResult res =
-        mockMvc
-            .perform(
-                post("/api/tests/" + study.getStudyId() + "/share")
-                    .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
-                    .content(payload)
-                    .header("Authorization", bearer(owner)))
-            .andExpect(status().isOk())
-            .andReturn();
+        MvcResult res = mockMvc
+                        .perform(post("/api/tests/" + study.getStudyId() + "/share")
+                                        .contentType(Objects
+                                                        .requireNonNull(MediaType.APPLICATION_JSON))
+                                        .content(payload).header("Authorization", bearer(owner)))
+                        .andExpect(status().isOk()).andReturn();
 
-    JsonNode json = objectMapper.readTree(res.getResponse().getContentAsString());
-    String accessLink = json.get("access_link").asText();
+        JsonNode json = objectMapper.readTree(res.getResponse().getContentAsString());
+        String accessLink = json.get("access_link").asText();
 
-    mockMvc.perform(get("/api/tests/share/" + accessLink)).andExpect(status().isOk());
-  }
+        mockMvc.perform(get("/api/tests/share/" + accessLink)).andExpect(status().isOk());
+    }
 
-  @Test
-  void shareLink_maxUses_exhausted_returns404() throws Exception {
-    Study study = new Study();
-    study.setTitle("ShareOnce");
-    study.setResearcherId(owner.getUserId());
-    study.setSettings("{}");
-    study = studyRepository.save(study);
+    @Test void shareLink_maxUses_exhausted_returns404() throws Exception {
+        Study study = new Study();
+        study.setTitle("ShareOnce");
+        study.setResearcherId(owner.getUserId());
+        study.setSettings("{}");
+        study = studyRepository.save(study);
 
-    String payload = "{\"max_uses\":1}";
+        String payload = "{\"max_uses\":1}";
 
-    MvcResult res =
-        mockMvc
-            .perform(
-                post("/api/tests/" + study.getStudyId() + "/share")
-                    .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
-                    .content(payload)
-                    .header("Authorization", bearer(owner)))
-            .andExpect(status().isOk())
-            .andReturn();
+        MvcResult res = mockMvc
+                        .perform(post("/api/tests/" + study.getStudyId() + "/share")
+                                        .contentType(Objects
+                                                        .requireNonNull(MediaType.APPLICATION_JSON))
+                                        .content(payload).header("Authorization", bearer(owner)))
+                        .andExpect(status().isOk()).andReturn();
 
-    JsonNode json = objectMapper.readTree(res.getResponse().getContentAsString());
-    String accessLink = json.get("access_link").asText();
+        JsonNode json = objectMapper.readTree(res.getResponse().getContentAsString());
+        String accessLink = json.get("access_link").asText();
 
-    mockMvc.perform(get("/api/tests/share/" + accessLink)).andExpect(status().isOk());
+        mockMvc.perform(get("/api/tests/share/" + accessLink)).andExpect(status().isOk());
 
-    mockMvc.perform(get("/api/tests/share/" + accessLink)).andExpect(status().isNotFound());
-  }
+        mockMvc.perform(get("/api/tests/share/" + accessLink)).andExpect(status().isNotFound());
+    }
 
-  @Test
-  void shareLink_expired_returns404() throws Exception {
-    Study study = new Study();
-    study.setTitle("ShareExpired");
-    study.setResearcherId(owner.getUserId());
-    study.setSettings("{}");
-    study = studyRepository.save(study);
+    @Test void shareLink_expired_returns404() throws Exception {
+        Study study = new Study();
+        study.setTitle("ShareExpired");
+        study.setResearcherId(owner.getUserId());
+        study.setSettings("{}");
+        study = studyRepository.save(study);
 
-    String payload = "{\"expires_at\":\"2000-01-01T00:00:00\"}";
+        String payload = "{\"expires_at\":\"2000-01-01T00:00:00\"}";
 
-    MvcResult res =
-        mockMvc
-            .perform(
-                post("/api/tests/" + study.getStudyId() + "/share")
-                    .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
-                    .content(payload)
-                    .header("Authorization", bearer(owner)))
-            .andExpect(status().isOk())
-            .andReturn();
+        MvcResult res = mockMvc
+                        .perform(post("/api/tests/" + study.getStudyId() + "/share")
+                                        .contentType(Objects
+                                                        .requireNonNull(MediaType.APPLICATION_JSON))
+                                        .content(payload).header("Authorization", bearer(owner)))
+                        .andExpect(status().isOk()).andReturn();
 
-    JsonNode json = objectMapper.readTree(res.getResponse().getContentAsString());
-    String accessLink = json.get("access_link").asText();
+        JsonNode json = objectMapper.readTree(res.getResponse().getContentAsString());
+        String accessLink = json.get("access_link").asText();
 
-    mockMvc.perform(get("/api/tests/share/" + accessLink)).andExpect(status().isNotFound());
-  }
+        mockMvc.perform(get("/api/tests/share/" + accessLink)).andExpect(status().isNotFound());
+    }
 
-  @Test
-  void createShareLink_unauthorized_returns401() throws Exception {
-    mockMvc
-        .perform(
-            post("/api/tests/" + UUID.randomUUID() + "/share")
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isUnauthorized());
-  }
+    @Test void createShareLink_unauthorized_returns401() throws Exception {
+        mockMvc.perform(post("/api/tests/" + UUID.randomUUID() + "/share")
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isUnauthorized());
+    }
 
-  @Test
-  void createShareLink_forbidden_whenIntruderTries() throws Exception {
-    Study study = new Study();
-    study.setTitle("Secret Study");
-    study.setResearcherId(owner.getUserId());
-    study.setSettings("{}");
-    study = studyRepository.save(study);
+    @Test void createShareLink_forbidden_whenIntruderTries() throws Exception {
+        Study study = new Study();
+        study.setTitle("Secret Study");
+        study.setResearcherId(owner.getUserId());
+        study.setSettings("{}");
+        study = studyRepository.save(study);
 
-    mockMvc
-        .perform(
-            post("/api/tests/" + study.getStudyId() + "/share")
-                .header("Authorization", bearer(intruder)))
-        .andExpect(status().isForbidden());
-  }
+        mockMvc.perform(post("/api/tests/" + study.getStudyId() + "/share").header("Authorization",
+                        bearer(intruder))).andExpect(status().isForbidden());
+    }
 
-  @Test
-  void createShareLink_notFound_whenStudyDoesNotExist() throws Exception {
-    mockMvc
-        .perform(
-            post("/api/tests/" + UUID.randomUUID() + "/share")
-                .header("Authorization", bearer(owner)))
-        .andExpect(status().isNotFound());
-  }
+    @Test void createShareLink_notFound_whenStudyDoesNotExist() throws Exception {
+        mockMvc.perform(post("/api/tests/" + UUID.randomUUID() + "/share").header("Authorization",
+                        bearer(owner))).andExpect(status().isNotFound());
+    }
 
-  @Test
-  void getShareLink_notFound_whenLinkInvalid() throws Exception {
-    mockMvc.perform(get("/api/tests/share/invalid-uuid-link")).andExpect(status().isNotFound());
-  }
+    @Test void getShareLink_notFound_whenLinkInvalid() throws Exception {
+        mockMvc.perform(get("/api/tests/share/invalid-uuid-link")).andExpect(status().isNotFound());
+    }
 }

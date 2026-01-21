@@ -8,9 +8,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-public class StudySessionCreateResponse {
+@AllArgsConstructor public class StudySessionCreateResponse {
 
-  @JsonProperty("session_id")
-  private UUID sessionId;
+    @JsonProperty("session_id") private UUID sessionId;
 }

@@ -13,34 +13,32 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/tests")
-@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring Dependency Injection")
-public class StudyShareLinkController {
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring Dependency Injection") public class StudyShareLinkController {
 
-  private final StudyShareLinkService shareLinkService;
+    private final StudyShareLinkService shareLinkService;
 
-  public StudyShareLinkController(StudyShareLinkService shareLinkService) {
-    this.shareLinkService = shareLinkService;
-  }
-
-  @PostMapping("/{testId}/share")
-  public ResponseEntity<StudyShareLinkResponse> createShareLink(
-      @PathVariable UUID testId,
-      @RequestBody(required = false) StudyShareLinkCreateRequest request,
-      @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
-
-    if (authenticatedUser == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    public StudyShareLinkController(StudyShareLinkService shareLinkService) {
+        this.shareLinkService = shareLinkService;
     }
 
-    StudyShareLinkResponse response =
-        shareLinkService.createShareLinkForResearcher(testId, authenticatedUser.userId(), request);
+    @PostMapping("/{testId}/share") public ResponseEntity<StudyShareLinkResponse> createShareLink(
+                    @PathVariable UUID testId,
+                    @RequestBody(required = false) StudyShareLinkCreateRequest request,
+                    @AuthenticationPrincipal AuthenticatedUser authenticatedUser) {
 
-    return ResponseEntity.ok(response);
-  }
+        if (authenticatedUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
-  @GetMapping("/share/{accessLink}")
-  public ResponseEntity<TestDetailsDto> getShareLinkDetails(@PathVariable String accessLink) {
-    TestDetailsDto details = shareLinkService.getTestDetailsForShareLink(accessLink);
-    return ResponseEntity.ok(details);
-  }
+        StudyShareLinkResponse response = shareLinkService.createShareLinkForResearcher(testId,
+                        authenticatedUser.userId(), request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/share/{accessLink}") public ResponseEntity<TestDetailsDto> getShareLinkDetails(
+                    @PathVariable String accessLink) {
+        TestDetailsDto details = shareLinkService.getTestDetailsForShareLink(accessLink);
+        return ResponseEntity.ok(details);
+    }
 }

@@ -18,64 +18,58 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-@Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+@Component public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-  private final JwtService jwtService;
-  private final UserAccountRepository userAccountRepository;
+    private final JwtService jwtService;
+    private final UserAccountRepository userAccountRepository;
 
-  public JwtAuthenticationFilter(
-      JwtService jwtService, UserAccountRepository userAccountRepository) {
-    this.jwtService = jwtService;
-    this.userAccountRepository = userAccountRepository;
-  }
-
-  @Override
-  protected void doFilterInternal(
-      @NonNull HttpServletRequest request,
-      @NonNull HttpServletResponse response,
-      @NonNull FilterChain filterChain)
-      throws ServletException, IOException {
-    String header = request.getHeader("Authorization");
-    if (header == null || !header.startsWith("Bearer ")) {
-      filterChain.doFilter(request, response);
-      return;
+    public JwtAuthenticationFilter(JwtService jwtService,
+                    UserAccountRepository userAccountRepository) {
+        this.jwtService = jwtService;
+        this.userAccountRepository = userAccountRepository;
     }
 
-    String token = header.substring(7);
-    JwtUserDetails details = jwtService.parseToken(token).orElse(null);
+    @Override protected void doFilterInternal(@NonNull HttpServletRequest request,
+                    @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
+                    throws ServletException, IOException {
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-    if (details == null) {
-      response.sendError(HttpStatus.UNAUTHORIZED.value(), "Invalid or expired token");
-      return;
+        String token = header.substring(7);
+        JwtUserDetails details = jwtService.parseToken(token).orElse(null);
+
+        if (details == null) {
+            response.sendError(HttpStatus.UNAUTHORIZED.value(), "Invalid or expired token");
+            return;
+        }
+
+        UUID userId = details.userId();
+        if (userId == null) {
+            response.sendError(HttpStatus.UNAUTHORIZED.value(), "Invalid token payload");
+            return;
+        }
+
+        UserAccount account = userAccountRepository.findById(userId).orElse(null);
+        if (account == null) {
+            response.sendError(HttpStatus.UNAUTHORIZED.value(), "User not found");
+            return;
+        }
+
+        if (account.isBanned()) {
+            response.sendError(HttpStatus.FORBIDDEN.value(), "Account is banned");
+            return;
+        }
+
+        AuthenticatedUser authenticatedUser = new AuthenticatedUser(account.getUserId(),
+                        account.getEmail(), account.getRole());
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        authenticatedUser, null,
+                        List.of(new SimpleGrantedAuthority("ROLE_" + account.getRole().name())));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        filterChain.doFilter(request, response);
     }
-
-    UUID userId = details.userId();
-    if (userId == null) {
-      response.sendError(HttpStatus.UNAUTHORIZED.value(), "Invalid token payload");
-      return;
-    }
-
-    UserAccount account = userAccountRepository.findById(userId).orElse(null);
-    if (account == null) {
-      response.sendError(HttpStatus.UNAUTHORIZED.value(), "User not found");
-      return;
-    }
-
-    if (account.isBanned()) {
-      response.sendError(HttpStatus.FORBIDDEN.value(), "Account is banned");
-      return;
-    }
-
-    AuthenticatedUser authenticatedUser =
-        new AuthenticatedUser(account.getUserId(), account.getEmail(), account.getRole());
-    UsernamePasswordAuthenticationToken authentication =
-        new UsernamePasswordAuthenticationToken(
-            authenticatedUser,
-            null,
-            List.of(new SimpleGrantedAuthority("ROLE_" + account.getRole().name())));
-    SecurityContextHolder.getContext().setAuthentication(authentication);
-
-    filterChain.doFilter(request, response);
-  }
 }

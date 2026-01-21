@@ -7,14 +7,9 @@ import java.util.UUID;
 import lombok.Data;
 
 @Data
-@SuppressFBWarnings(
-    value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"},
-    justification = "DTO with nested lists - suppressing for simplicity")
-public class StudySessionAggregateHeatmapDto {
+@SuppressFBWarnings(value = {"EI_EXPOSE_REP",
+                "EI_EXPOSE_REP2"}, justification = "DTO with nested lists - suppressing for simplicity") public class StudySessionAggregateHeatmapDto {
 
-  @JsonProperty("study_id")
-  private UUID studyId;
-
-  @JsonProperty("heatmaps")
-  private List<List<HeatmapPointDto>> heatmaps;
+    @JsonProperty("study_id") private UUID studyId;
+    @JsonProperty("heatmaps") private List<List<HeatmapPointDto>> heatmaps;
 }

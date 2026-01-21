@@ -25,102 +25,97 @@ import org.pzsp2.eye_tracking.user.UserAccountRepository;
 import org.pzsp2.eye_tracking.user.UserRole;
 import org.springframework.web.server.ResponseStatusException;
 
-@ExtendWith(MockitoExtension.class)
-class AuthServiceTest {
+@ExtendWith(MockitoExtension.class) class AuthServiceTest {
 
-  @Mock private UserAccountRepository userAccountRepository;
-  @Mock private PasswordService passwordService;
-  @Mock private JwtService jwtService;
+    @Mock private UserAccountRepository userAccountRepository;
+    @Mock private PasswordService passwordService;
+    @Mock private JwtService jwtService;
 
-  private AuthService authService;
+    private AuthService authService;
 
-  @BeforeEach
-  void setUp() {
-    authService = new AuthService(userAccountRepository, passwordService, jwtService);
-  }
+    @BeforeEach void setUp() {
+        authService = new AuthService(userAccountRepository, passwordService, jwtService);
+    }
 
-  @Test
-  void register_success() {
-    RegisterRequest request = new RegisterRequest("test@example.com", "pass");
-    given(userAccountRepository.existsByEmailIgnoreCase("test@example.com")).willReturn(false);
-    given(passwordService.hashPassword("pass")).willReturn("hash");
+    @Test void register_success() {
+        RegisterRequest request = new RegisterRequest("test@example.com", "pass");
+        given(userAccountRepository.existsByEmailIgnoreCase("test@example.com")).willReturn(false);
+        given(passwordService.hashPassword("pass")).willReturn("hash");
 
-    UserAccount savedUser =
-        new UserAccount(UUID.randomUUID(), "test@example.com", "hash", UserRole.USER);
-    given(userAccountRepository.save(any(UserAccount.class))).willReturn(savedUser);
+        UserAccount savedUser = new UserAccount(UUID.randomUUID(), "test@example.com", "hash",
+                        UserRole.USER);
+        given(userAccountRepository.save(any(UserAccount.class))).willReturn(savedUser);
 
-    JwtToken token = new JwtToken("jwt", Instant.now());
-    given(jwtService.generateToken(savedUser)).willReturn(token);
+        JwtToken token = new JwtToken("jwt", Instant.now());
+        given(jwtService.generateToken(savedUser)).willReturn(token);
 
-    var response = authService.register(request);
+        var response = authService.register(request);
 
-    assertThat(response.email()).isEqualTo("test@example.com");
-    verify(userAccountRepository).save(any(UserAccount.class));
-  }
+        assertThat(response.email()).isEqualTo("test@example.com");
+        verify(userAccountRepository).save(any(UserAccount.class));
+    }
 
-  @Test
-  void register_conflict_emailExists() {
-    RegisterRequest request = new RegisterRequest("test@example.com", "pass");
-    given(userAccountRepository.existsByEmailIgnoreCase("test@example.com")).willReturn(true);
+    @Test void register_conflict_emailExists() {
+        RegisterRequest request = new RegisterRequest("test@example.com", "pass");
+        given(userAccountRepository.existsByEmailIgnoreCase("test@example.com")).willReturn(true);
 
-    ResponseStatusException ex =
-        assertThrows(ResponseStatusException.class, () -> authService.register(request));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                        () -> authService.register(request));
 
-    assertThat(ex.getStatusCode()).isEqualTo(CONFLICT);
-  }
+        assertThat(ex.getStatusCode()).isEqualTo(CONFLICT);
+    }
 
-  @Test
-  void login_success() {
-    LoginRequest req = new LoginRequest("u@t.com", "pass");
-    UserAccount account = new UserAccount(UUID.randomUUID(), "u@t.com", "hash", UserRole.USER);
-    account.setBanned(false);
+    @Test void login_success() {
+        LoginRequest req = new LoginRequest("u@t.com", "pass");
+        UserAccount account = new UserAccount(UUID.randomUUID(), "u@t.com", "hash", UserRole.USER);
+        account.setBanned(false);
 
-    given(userAccountRepository.findByEmailIgnoreCase("u@t.com")).willReturn(Optional.of(account));
-    given(passwordService.matches("pass", "hash")).willReturn(true);
-    given(jwtService.generateToken(account)).willReturn(new JwtToken("jwt", Instant.now()));
+        given(userAccountRepository.findByEmailIgnoreCase("u@t.com"))
+                        .willReturn(Optional.of(account));
+        given(passwordService.matches("pass", "hash")).willReturn(true);
+        given(jwtService.generateToken(account)).willReturn(new JwtToken("jwt", Instant.now()));
 
-    var res = authService.login(req);
+        var res = authService.login(req);
 
-    assertThat(res.token()).isEqualTo("jwt");
-  }
+        assertThat(res.token()).isEqualTo("jwt");
+    }
 
-  @Test
-  void login_unauthorized_userNotFound() {
-    LoginRequest req = new LoginRequest("missing@t.com", "pass");
-    given(userAccountRepository.findByEmailIgnoreCase("missing@t.com"))
-        .willReturn(Optional.empty());
+    @Test void login_unauthorized_userNotFound() {
+        LoginRequest req = new LoginRequest("missing@t.com", "pass");
+        given(userAccountRepository.findByEmailIgnoreCase("missing@t.com"))
+                        .willReturn(Optional.empty());
 
-    ResponseStatusException ex =
-        assertThrows(ResponseStatusException.class, () -> authService.login(req));
-    assertThat(ex.getStatusCode()).isEqualTo(UNAUTHORIZED);
-  }
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                        () -> authService.login(req));
+        assertThat(ex.getStatusCode()).isEqualTo(UNAUTHORIZED);
+    }
 
-  @Test
-  void login_unauthorized_badPassword() {
-    LoginRequest req = new LoginRequest("u@t.com", "wrong");
-    UserAccount account = new UserAccount(UUID.randomUUID(), "u@t.com", "hash", UserRole.USER);
+    @Test void login_unauthorized_badPassword() {
+        LoginRequest req = new LoginRequest("u@t.com", "wrong");
+        UserAccount account = new UserAccount(UUID.randomUUID(), "u@t.com", "hash", UserRole.USER);
 
-    given(userAccountRepository.findByEmailIgnoreCase("u@t.com")).willReturn(Optional.of(account));
-    given(passwordService.matches("wrong", "hash")).willReturn(false);
+        given(userAccountRepository.findByEmailIgnoreCase("u@t.com"))
+                        .willReturn(Optional.of(account));
+        given(passwordService.matches("wrong", "hash")).willReturn(false);
 
-    ResponseStatusException ex =
-        assertThrows(ResponseStatusException.class, () -> authService.login(req));
-    assertThat(ex.getStatusCode()).isEqualTo(UNAUTHORIZED);
-  }
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                        () -> authService.login(req));
+        assertThat(ex.getStatusCode()).isEqualTo(UNAUTHORIZED);
+    }
 
-  @Test
-  void login_forbidden_bannedUser() {
-    LoginRequest req = new LoginRequest("banned@t.com", "pass");
-    UserAccount account = new UserAccount(UUID.randomUUID(), "banned@t.com", "hash", UserRole.USER);
-    account.setBanned(true);
+    @Test void login_forbidden_bannedUser() {
+        LoginRequest req = new LoginRequest("banned@t.com", "pass");
+        UserAccount account = new UserAccount(UUID.randomUUID(), "banned@t.com", "hash",
+                        UserRole.USER);
+        account.setBanned(true);
 
-    given(userAccountRepository.findByEmailIgnoreCase("banned@t.com"))
-        .willReturn(Optional.of(account));
-    given(passwordService.matches("pass", "hash")).willReturn(true);
+        given(userAccountRepository.findByEmailIgnoreCase("banned@t.com"))
+                        .willReturn(Optional.of(account));
+        given(passwordService.matches("pass", "hash")).willReturn(true);
 
-    ResponseStatusException ex =
-        assertThrows(ResponseStatusException.class, () -> authService.login(req));
-    assertThat(ex.getStatusCode()).isEqualTo(FORBIDDEN);
-    assertThat(ex.getReason()).isEqualTo("Account is banned");
-  }
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                        () -> authService.login(req));
+        assertThat(ex.getStatusCode()).isEqualTo(FORBIDDEN);
+        assertThat(ex.getReason()).isEqualTo("Account is banned");
+    }
 }

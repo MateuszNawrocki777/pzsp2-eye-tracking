@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface StudyMaterialRepository extends JpaRepository<StudyMaterial, UUID> {
-  Optional<StudyMaterial> findFirstByStudyOrderByDisplayOrderAsc(Study study);
+    Optional<StudyMaterial> findFirstByStudyOrderByDisplayOrderAsc(Study study);
 
-  List<StudyMaterial> findAllByStudyOrderByDisplayOrderAsc(Study study);
+    List<StudyMaterial> findAllByStudyOrderByDisplayOrderAsc(Study study);
 }

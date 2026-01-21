@@ -6,23 +6,19 @@ import java.util.List;
 import java.util.UUID;
 import lombok.Data;
 
-@Data
-public class StudySessionCreateRequest {
+@Data public class StudySessionCreateRequest {
 
-  @JsonProperty("study_id")
-  private UUID studyId;
+    @JsonProperty("study_id") private UUID studyId;
 
-  @JsonProperty("name")
-  private String name;
+    @JsonProperty("name") private String name;
 
-  @JsonProperty("points_per_image")
-  private List<List<List<Double>>> pointsPerImage;
+    @JsonProperty("points_per_image") private List<List<List<Double>>> pointsPerImage;
 
-  public List<List<List<Double>>> getPointsPerImage() {
-    return pointsPerImage == null ? null : new ArrayList<>(pointsPerImage);
-  }
+    public List<List<List<Double>>> getPointsPerImage() {
+        return pointsPerImage == null ? null : new ArrayList<>(pointsPerImage);
+    }
 
-  public void setPointsPerImage(List<List<List<Double>>> pointsPerImage) {
-    this.pointsPerImage = pointsPerImage == null ? null : new ArrayList<>(pointsPerImage);
-  }
+    public void setPointsPerImage(List<List<List<Double>>> pointsPerImage) {
+        this.pointsPerImage = pointsPerImage == null ? null : new ArrayList<>(pointsPerImage);
+    }
 }

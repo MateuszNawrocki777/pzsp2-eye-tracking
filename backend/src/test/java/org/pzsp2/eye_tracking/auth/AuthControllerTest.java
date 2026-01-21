@@ -17,37 +17,33 @@ import org.pzsp2.eye_tracking.auth.dto.RegisterRequest;
 import org.pzsp2.eye_tracking.auth.dto.RegisterResponse;
 import org.pzsp2.eye_tracking.user.UserRole;
 
-@ExtendWith(MockitoExtension.class)
-class AuthControllerTest {
+@ExtendWith(MockitoExtension.class) class AuthControllerTest {
 
-  @Mock private AuthService authService;
+    @Mock private AuthService authService;
 
-  @InjectMocks private AuthController controller;
+    @InjectMocks private AuthController controller;
 
-  @Test
-  void register_callsService() {
-    RegisterRequest req = new RegisterRequest("a@b.c", "pw");
-    RegisterResponse mockResp =
-        new RegisterResponse(
-            UUID.randomUUID(), "a@b.c", UserRole.USER, Instant.now(), "t", Instant.now());
+    @Test void register_callsService() {
+        RegisterRequest req = new RegisterRequest("a@b.c", "pw");
+        RegisterResponse mockResp = new RegisterResponse(UUID.randomUUID(), "a@b.c", UserRole.USER,
+                        Instant.now(), "t", Instant.now());
 
-    when(authService.register(req)).thenReturn(mockResp);
+        when(authService.register(req)).thenReturn(mockResp);
 
-    RegisterResponse result = controller.register(req);
-    assertThat(result).isEqualTo(mockResp);
-    verify(authService).register(req);
-  }
+        RegisterResponse result = controller.register(req);
+        assertThat(result).isEqualTo(mockResp);
+        verify(authService).register(req);
+    }
 
-  @Test
-  void login_callsService() {
-    LoginRequest req = new LoginRequest("a@b.c", "pw");
-    LoginResponse mockResp =
-        new LoginResponse(UUID.randomUUID(), UserRole.USER, "t", Instant.now());
+    @Test void login_callsService() {
+        LoginRequest req = new LoginRequest("a@b.c", "pw");
+        LoginResponse mockResp = new LoginResponse(UUID.randomUUID(), UserRole.USER, "t",
+                        Instant.now());
 
-    when(authService.login(req)).thenReturn(mockResp);
+        when(authService.login(req)).thenReturn(mockResp);
 
-    LoginResponse result = controller.login(req);
-    assertThat(result).isEqualTo(mockResp);
-    verify(authService).login(req);
-  }
+        LoginResponse result = controller.login(req);
+        assertThat(result).isEqualTo(mockResp);
+        verify(authService).login(req);
+    }
 }

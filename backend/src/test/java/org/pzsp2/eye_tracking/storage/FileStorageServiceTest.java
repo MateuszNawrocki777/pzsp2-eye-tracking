@@ -32,563 +32,515 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-@ExtendWith(MockitoExtension.class)
-class FileStorageServiceTest {
+@ExtendWith(MockitoExtension.class) class FileStorageServiceTest {
 
-  @Mock private StudyRepository studyRepository;
+    @Mock private StudyRepository studyRepository;
 
-  @Mock private StudyMaterialRepository materialRepository;
+    @Mock private StudyMaterialRepository materialRepository;
 
-  @Mock private StudyShareLinkService shareLinkService;
+    @Mock private StudyShareLinkService shareLinkService;
 
-  private FileStorageService service;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+    private FileStorageService service;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-  @TempDir Path tempDir;
+    @TempDir Path tempDir;
 
-  @BeforeEach
-  void setUp() {
-    service =
-        new FileStorageService(
-            tempDir.toString(), materialRepository, studyRepository, shareLinkService);
+    @BeforeEach void setUp() {
+        service = new FileStorageService(tempDir.toString(), materialRepository, studyRepository,
+                        shareLinkService);
 
-    MockHttpServletRequest request = new MockHttpServletRequest();
-    RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
-  }
-
-  @Test
-  void updateTestSettings_allowsOwner_andMergesFields() throws JsonProcessingException {
-    UUID testId = UUID.randomUUID();
-    UUID owner = UUID.randomUUID();
-
-    Study study = new Study();
-    study.setStudyId(testId);
-    study.setResearcherId(owner);
-    TestCreateRequest oldSettings = new TestCreateRequest();
-    oldSettings.setDispGazeTracking(false);
-    oldSettings.setTimePerImageMs(1000);
-    study.setSettings(objectMapper.writeValueAsString(oldSettings));
-
-    given(studyRepository.findById(testId)).willReturn(Optional.of(study));
-
-    TestCreateRequest req = new TestCreateRequest();
-    req.setTitle("New Title");
-    req.setDispGazeTracking(true);
-
-    service.updateTestSettingsForResearcher(testId, req, owner);
-
-    verify(studyRepository).save(study);
-    assertEquals("New Title", study.getTitle());
-
-    TestCreateRequest merged = objectMapper.readValue(study.getSettings(), TestCreateRequest.class);
-    assertTrue(merged.getDispGazeTracking());
-    assertEquals(1000, merged.getTimePerImageMs());
-  }
-
-  @Test
-  void updateTestSettings_deniesNonOwner() {
-    UUID testId = UUID.randomUUID();
-    UUID owner = UUID.randomUUID();
-    UUID other = UUID.randomUUID();
-
-    Study study = new Study();
-    study.setResearcherId(owner);
-
-    given(studyRepository.findById(testId)).willReturn(Optional.of(study));
-
-    ResponseStatusException ex =
-        assertThrows(
-            ResponseStatusException.class,
-            () -> service.updateTestSettingsForResearcher(testId, new TestCreateRequest(), other));
-    assertEquals(FORBIDDEN, ex.getStatusCode());
-  }
-
-  @Test
-  void updateTestSettings_throwsNotFound_whenStudyMissing() {
-    UUID testId = UUID.randomUUID();
-    given(studyRepository.findById(testId)).willReturn(Optional.empty());
-
-    ResponseStatusException ex =
-        assertThrows(
-            ResponseStatusException.class,
-            () ->
-                service.updateTestSettingsForResearcher(
-                    testId, new TestCreateRequest(), UUID.randomUUID()));
-    assertEquals(NOT_FOUND, ex.getStatusCode());
-  }
-
-  @Test
-  void updateTestSettings_handlesCorruptedJsonInDb() {
-    UUID testId = UUID.randomUUID();
-    UUID owner = UUID.randomUUID();
-    Study study = new Study();
-    study.setResearcherId(owner);
-    study.setSettings("{ corrupted json ...");
-
-    given(studyRepository.findById(testId)).willReturn(Optional.of(study));
-
-    assertThrows(
-        RuntimeException.class,
-        () -> service.updateTestSettingsForResearcher(testId, new TestCreateRequest(), owner));
-  }
-
-  @Test
-  void deleteTest_allowsOwner_andDeletesFiles() throws IOException {
-    UUID testId = UUID.randomUUID();
-    UUID owner = UUID.randomUUID();
-
-    Study study = new Study();
-    study.setResearcherId(owner);
-
-    Path file = tempDir.resolve("delete_me.txt");
-    Files.createFile(file);
-
-    StudyMaterial m1 = new StudyMaterial();
-    m1.setFilePath("delete_me.txt");
-    m1.setStudy(study);
-
-    given(studyRepository.findById(testId)).willReturn(Optional.of(study));
-    given(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study)).willReturn(List.of(m1));
-
-    service.deleteTestForResearcher(testId, owner);
-
-    assertFalse(Files.exists(file), "File should be deleted");
-    verify(materialRepository).deleteAll(any());
-    verify(studyRepository).delete(study);
-  }
-
-  @Test
-  void deleteTest_throwsNotFound() {
-    UUID testId = UUID.randomUUID();
-    given(studyRepository.findById(testId)).willReturn(Optional.empty());
-
-    ResponseStatusException ex =
-        assertThrows(
-            ResponseStatusException.class,
-            () -> service.deleteTestForResearcher(testId, UUID.randomUUID()));
-    assertEquals(NOT_FOUND, ex.getStatusCode());
-  }
-
-  @Test
-  void deleteTest_deniesNonOwner() {
-    UUID testId = UUID.randomUUID();
-    UUID owner = UUID.randomUUID();
-    Study study = new Study();
-    study.setResearcherId(owner);
-
-    given(studyRepository.findById(testId)).willReturn(Optional.of(study));
-
-    ResponseStatusException ex =
-        assertThrows(
-            ResponseStatusException.class,
-            () -> service.deleteTestForResearcher(testId, UUID.randomUUID()));
-    assertEquals(FORBIDDEN, ex.getStatusCode());
-  }
-
-  @Test
-  void getTestDetails_allowsOwner_andMapsJson() throws Exception {
-    UUID testId = UUID.randomUUID();
-    UUID owner = UUID.randomUUID();
-
-    TestCreateRequest req = new TestCreateRequest();
-    req.setDispGazeTracking(true);
-    req.setTimePerImageMs(500);
-
-    Study study = new Study();
-    study.setStudyId(testId);
-    study.setResearcherId(owner);
-    study.setTitle("Test");
-    study.setSettings(objectMapper.writeValueAsString(req));
-
-    StudyMaterial m1 = new StudyMaterial();
-    m1.setMaterialId(UUID.randomUUID());
-    m1.setStudy(study);
-
-    given(studyRepository.findById(testId)).willReturn(Optional.of(study));
-    given(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study)).willReturn(List.of(m1));
-
-    var dto = service.getTestDetailsForResearcher(testId, owner);
-
-    assertEquals("Test", dto.getTitle());
-    assertEquals(Boolean.TRUE, dto.getDispGazeTracking());
-    assertEquals(500, dto.getTimePerImageMs());
-    assertEquals(1, dto.getFileLinks().size());
-  }
-
-  @Test
-  void getTestDetails_throwsNotFound() {
-    UUID testId = UUID.randomUUID();
-    given(studyRepository.findById(testId)).willReturn(Optional.empty());
-
-    ResponseStatusException ex =
-        assertThrows(
-            ResponseStatusException.class,
-            () -> service.getTestDetailsForResearcher(testId, UUID.randomUUID()));
-    assertEquals(NOT_FOUND, ex.getStatusCode());
-  }
-
-  @Test
-  void getTestDetails_throwsForbidden() {
-    UUID testId = UUID.randomUUID();
-    Study study = new Study();
-    study.setResearcherId(UUID.randomUUID());
-
-    given(studyRepository.findById(testId)).willReturn(Optional.of(study));
-
-    ResponseStatusException ex =
-        assertThrows(
-            ResponseStatusException.class,
-            () -> service.getTestDetailsForResearcher(testId, UUID.randomUUID()));
-    assertEquals(FORBIDDEN, ex.getStatusCode());
-  }
-
-  @Test
-  void getTestDetails_handlesJsonError() {
-    UUID testId = UUID.randomUUID();
-    UUID owner = UUID.randomUUID();
-    Study study = new Study();
-    study.setResearcherId(owner);
-    study.setSettings("{ bad json");
-
-    given(studyRepository.findById(testId)).willReturn(Optional.of(study));
-
-    assertThrows(RuntimeException.class, () -> service.getTestDetailsForResearcher(testId, owner));
-  }
-
-  @Test
-  void createFullTest_savesStudyAndFiles() throws IOException {
-    UUID owner = UUID.randomUUID();
-    TestCreateRequest req = new TestCreateRequest();
-    req.setTitle("Title");
-
-    MockMultipartFile f1 = new MockMultipartFile("files", "a.png", "image/png", "data".getBytes());
-
-    given(studyRepository.save(any(Study.class)))
-        .willAnswer(
-            inv -> {
-              Study s = inv.getArgument(0);
-              s.setStudyId(UUID.randomUUID());
-              return s;
-            });
-
-    UUID createdId = service.createFullTest(req, new MultipartFile[] {f1}, owner);
-
-    assertNotNull(createdId);
-    verify(materialRepository).save(any(StudyMaterial.class));
-    assertTrue(Files.list(tempDir).findAny().isPresent());
-  }
-
-  @Test
-  void createFullTest_handlesIOException_fromMultipart() {
-    UUID owner = UUID.randomUUID();
-    TestCreateRequest req = new TestCreateRequest();
-
-    MultipartFile badFile = mock(MultipartFile.class);
-    try {
-      when(badFile.getOriginalFilename()).thenReturn("bad.png");
-      when(badFile.getInputStream()).thenThrow(new IOException("Simulated IO Error"));
-    } catch (IOException e) {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
     }
 
-    given(studyRepository.save(any(Study.class))).willReturn(new Study());
+    @Test void updateTestSettings_allowsOwner_andMergesFields() throws JsonProcessingException {
+        UUID testId = UUID.randomUUID();
+        UUID owner = UUID.randomUUID();
 
-    assertThrows(
-        RuntimeException.class,
-        () -> service.createFullTest(req, new MultipartFile[] {badFile}, owner));
-  }
+        Study study = new Study();
+        study.setStudyId(testId);
+        study.setResearcherId(owner);
+        TestCreateRequest oldSettings = new TestCreateRequest();
+        oldSettings.setDispGazeTracking(false);
+        oldSettings.setTimePerImageMs(1000);
+        study.setSettings(objectMapper.writeValueAsString(oldSettings));
 
-  @Test
-  void getAllTests_returnsMappedList() {
-    UUID owner = UUID.randomUUID();
-    Study study = new Study();
-    study.setStudyId(UUID.randomUUID());
-    study.setTitle("My Test");
-    study.setResearcherId(owner);
+        given(studyRepository.findById(testId)).willReturn(Optional.of(study));
 
-    StudyMaterial m = new StudyMaterial();
-    m.setMaterialId(UUID.randomUUID());
+        TestCreateRequest req = new TestCreateRequest();
+        req.setTitle("New Title");
+        req.setDispGazeTracking(true);
 
-    given(studyRepository.findAll()).willReturn(List.of(study));
-    given(materialRepository.findFirstByStudyOrderByDisplayOrderAsc(study))
-        .willReturn(Optional.of(m));
+        service.updateTestSettingsForResearcher(testId, req, owner);
 
-    var list = service.getAllTestsForResearcher(owner);
+        verify(studyRepository).save(study);
+        assertEquals("New Title", study.getTitle());
 
-    assertEquals(1, list.size());
-    assertNotNull(list.get(0).getFirstImageLink());
-  }
+        TestCreateRequest merged = objectMapper.readValue(study.getSettings(),
+                        TestCreateRequest.class);
+        assertTrue(merged.getDispGazeTracking());
+        assertEquals(1000, merged.getTimePerImageMs());
+    }
 
-  @Test
-  void getAllTests_handlesMissingImage() {
-    UUID owner = UUID.randomUUID();
-    Study study = new Study();
-    study.setResearcherId(owner);
+    @Test void updateTestSettings_deniesNonOwner() {
+        UUID testId = UUID.randomUUID();
+        UUID owner = UUID.randomUUID();
+        UUID other = UUID.randomUUID();
 
-    given(studyRepository.findAll()).willReturn(List.of(study));
-    given(materialRepository.findFirstByStudyOrderByDisplayOrderAsc(study))
-        .willReturn(Optional.empty());
+        Study study = new Study();
+        study.setResearcherId(owner);
 
-    var list = service.getAllTestsForResearcher(owner);
+        given(studyRepository.findById(testId)).willReturn(Optional.of(study));
 
-    assertEquals(1, list.size());
-    assertNull(list.get(0).getFirstImageLink());
-  }
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service
+                        .updateTestSettingsForResearcher(testId, new TestCreateRequest(), other));
+        assertEquals(FORBIDDEN, ex.getStatusCode());
+    }
 
-  @Test
-  void loadFileAsResource_success() throws IOException {
-    UUID fileId = UUID.randomUUID();
-    String filename = "test.txt";
+    @Test void updateTestSettings_throwsNotFound_whenStudyMissing() {
+        UUID testId = UUID.randomUUID();
+        given(studyRepository.findById(testId)).willReturn(Optional.empty());
 
-    Files.createFile(tempDir.resolve(filename));
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                        () -> service.updateTestSettingsForResearcher(testId,
+                                        new TestCreateRequest(), UUID.randomUUID()));
+        assertEquals(NOT_FOUND, ex.getStatusCode());
+    }
 
-    StudyMaterial mat = new StudyMaterial();
-    mat.setFilePath(filename);
+    @Test void updateTestSettings_handlesCorruptedJsonInDb() {
+        UUID testId = UUID.randomUUID();
+        UUID owner = UUID.randomUUID();
+        Study study = new Study();
+        study.setResearcherId(owner);
+        study.setSettings("{ corrupted json ...");
 
-    given(materialRepository.findById(fileId)).willReturn(Optional.of(mat));
+        given(studyRepository.findById(testId)).willReturn(Optional.of(study));
 
-    Resource res = service.loadFileAsResource(fileId);
-    assertTrue(res.exists());
-  }
+        assertThrows(RuntimeException.class, () -> service.updateTestSettingsForResearcher(testId,
+                        new TestCreateRequest(), owner));
+    }
 
-  @Test
-  void loadFileAsResource_throwsIfMaterialNotFound() {
-    UUID fileId = UUID.randomUUID();
-    given(materialRepository.findById(fileId)).willReturn(Optional.empty());
+    @Test void deleteTest_allowsOwner_andDeletesFiles() throws IOException {
+        UUID testId = UUID.randomUUID();
+        UUID owner = UUID.randomUUID();
 
-    assertThrows(RuntimeException.class, () -> service.loadFileAsResource(fileId));
-  }
+        Study study = new Study();
+        study.setResearcherId(owner);
 
-  @Test
-  void loadFileAsResource_throwsIfFileMissingOnDisk() {
-    UUID fileId = UUID.randomUUID();
-    StudyMaterial mat = new StudyMaterial();
-    mat.setFilePath("ghost_file.txt");
+        Path file = tempDir.resolve("delete_me.txt");
+        Files.createFile(file);
 
-    given(materialRepository.findById(fileId)).willReturn(Optional.of(mat));
+        StudyMaterial m1 = new StudyMaterial();
+        m1.setFilePath("delete_me.txt");
+        m1.setStudy(study);
 
-    RuntimeException ex =
+        given(studyRepository.findById(testId)).willReturn(Optional.of(study));
+        given(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study))
+                        .willReturn(List.of(m1));
+
+        service.deleteTestForResearcher(testId, owner);
+
+        assertFalse(Files.exists(file), "File should be deleted");
+        verify(materialRepository).deleteAll(any());
+        verify(studyRepository).delete(study);
+    }
+
+    @Test void deleteTest_throwsNotFound() {
+        UUID testId = UUID.randomUUID();
+        given(studyRepository.findById(testId)).willReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                        () -> service.deleteTestForResearcher(testId, UUID.randomUUID()));
+        assertEquals(NOT_FOUND, ex.getStatusCode());
+    }
+
+    @Test void deleteTest_deniesNonOwner() {
+        UUID testId = UUID.randomUUID();
+        UUID owner = UUID.randomUUID();
+        Study study = new Study();
+        study.setResearcherId(owner);
+
+        given(studyRepository.findById(testId)).willReturn(Optional.of(study));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                        () -> service.deleteTestForResearcher(testId, UUID.randomUUID()));
+        assertEquals(FORBIDDEN, ex.getStatusCode());
+    }
+
+    @Test void getTestDetails_allowsOwner_andMapsJson() throws Exception {
+        UUID testId = UUID.randomUUID();
+        UUID owner = UUID.randomUUID();
+
+        TestCreateRequest req = new TestCreateRequest();
+        req.setDispGazeTracking(true);
+        req.setTimePerImageMs(500);
+
+        Study study = new Study();
+        study.setStudyId(testId);
+        study.setResearcherId(owner);
+        study.setTitle("Test");
+        study.setSettings(objectMapper.writeValueAsString(req));
+
+        StudyMaterial m1 = new StudyMaterial();
+        m1.setMaterialId(UUID.randomUUID());
+        m1.setStudy(study);
+
+        given(studyRepository.findById(testId)).willReturn(Optional.of(study));
+        given(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study))
+                        .willReturn(List.of(m1));
+
+        var dto = service.getTestDetailsForResearcher(testId, owner);
+
+        assertEquals("Test", dto.getTitle());
+        assertEquals(Boolean.TRUE, dto.getDispGazeTracking());
+        assertEquals(500, dto.getTimePerImageMs());
+        assertEquals(1, dto.getFileLinks().size());
+    }
+
+    @Test void getTestDetails_throwsNotFound() {
+        UUID testId = UUID.randomUUID();
+        given(studyRepository.findById(testId)).willReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                        () -> service.getTestDetailsForResearcher(testId, UUID.randomUUID()));
+        assertEquals(NOT_FOUND, ex.getStatusCode());
+    }
+
+    @Test void getTestDetails_throwsForbidden() {
+        UUID testId = UUID.randomUUID();
+        Study study = new Study();
+        study.setResearcherId(UUID.randomUUID());
+
+        given(studyRepository.findById(testId)).willReturn(Optional.of(study));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                        () -> service.getTestDetailsForResearcher(testId, UUID.randomUUID()));
+        assertEquals(FORBIDDEN, ex.getStatusCode());
+    }
+
+    @Test void getTestDetails_handlesJsonError() {
+        UUID testId = UUID.randomUUID();
+        UUID owner = UUID.randomUUID();
+        Study study = new Study();
+        study.setResearcherId(owner);
+        study.setSettings("{ bad json");
+
+        given(studyRepository.findById(testId)).willReturn(Optional.of(study));
+
+        assertThrows(RuntimeException.class,
+                        () -> service.getTestDetailsForResearcher(testId, owner));
+    }
+
+    @Test void createFullTest_savesStudyAndFiles() throws IOException {
+        UUID owner = UUID.randomUUID();
+        TestCreateRequest req = new TestCreateRequest();
+        req.setTitle("Title");
+
+        MockMultipartFile f1 = new MockMultipartFile("files", "a.png", "image/png",
+                        "data".getBytes());
+
+        given(studyRepository.save(any(Study.class))).willAnswer(inv -> {
+            Study s = inv.getArgument(0);
+            s.setStudyId(UUID.randomUUID());
+            return s;
+        });
+
+        UUID createdId = service.createFullTest(req, new MultipartFile[]{f1}, owner);
+
+        assertNotNull(createdId);
+        verify(materialRepository).save(any(StudyMaterial.class));
+        assertTrue(Files.list(tempDir).findAny().isPresent());
+    }
+
+    @Test void createFullTest_handlesIOException_fromMultipart() {
+        UUID owner = UUID.randomUUID();
+        TestCreateRequest req = new TestCreateRequest();
+
+        MultipartFile badFile = mock(MultipartFile.class);
+        try {
+            when(badFile.getOriginalFilename()).thenReturn("bad.png");
+            when(badFile.getInputStream()).thenThrow(new IOException("Simulated IO Error"));
+        } catch (IOException e) {
+        }
+
+        given(studyRepository.save(any(Study.class))).willReturn(new Study());
+
+        assertThrows(RuntimeException.class,
+                        () -> service.createFullTest(req, new MultipartFile[]{badFile}, owner));
+    }
+
+    @Test void getAllTests_returnsMappedList() {
+        UUID owner = UUID.randomUUID();
+        Study study = new Study();
+        study.setStudyId(UUID.randomUUID());
+        study.setTitle("My Test");
+        study.setResearcherId(owner);
+
+        StudyMaterial m = new StudyMaterial();
+        m.setMaterialId(UUID.randomUUID());
+
+        given(studyRepository.findAll()).willReturn(List.of(study));
+        given(materialRepository.findFirstByStudyOrderByDisplayOrderAsc(study))
+                        .willReturn(Optional.of(m));
+
+        var list = service.getAllTestsForResearcher(owner);
+
+        assertEquals(1, list.size());
+        assertNotNull(list.get(0).getFirstImageLink());
+    }
+
+    @Test void getAllTests_handlesMissingImage() {
+        UUID owner = UUID.randomUUID();
+        Study study = new Study();
+        study.setResearcherId(owner);
+
+        given(studyRepository.findAll()).willReturn(List.of(study));
+        given(materialRepository.findFirstByStudyOrderByDisplayOrderAsc(study))
+                        .willReturn(Optional.empty());
+
+        var list = service.getAllTestsForResearcher(owner);
+
+        assertEquals(1, list.size());
+        assertNull(list.get(0).getFirstImageLink());
+    }
+
+    @Test void loadFileAsResource_success() throws IOException {
+        UUID fileId = UUID.randomUUID();
+        String filename = "test.txt";
+
+        Files.createFile(tempDir.resolve(filename));
+
+        StudyMaterial mat = new StudyMaterial();
+        mat.setFilePath(filename);
+
+        given(materialRepository.findById(fileId)).willReturn(Optional.of(mat));
+
+        Resource res = service.loadFileAsResource(fileId);
+        assertTrue(res.exists());
+    }
+
+    @Test void loadFileAsResource_throwsIfMaterialNotFound() {
+        UUID fileId = UUID.randomUUID();
+        given(materialRepository.findById(fileId)).willReturn(Optional.empty());
+
         assertThrows(RuntimeException.class, () -> service.loadFileAsResource(fileId));
-    assertEquals("File not found", ex.getMessage());
-  }
+    }
 
-  @Test
-  void getContentType_returnsStoredType() {
-    UUID fileId = UUID.randomUUID();
-    StudyMaterial mat = new StudyMaterial();
-    mat.setContentType("image/png");
+    @Test void loadFileAsResource_throwsIfFileMissingOnDisk() {
+        UUID fileId = UUID.randomUUID();
+        StudyMaterial mat = new StudyMaterial();
+        mat.setFilePath("ghost_file.txt");
 
-    given(materialRepository.findById(fileId)).willReturn(Optional.of(mat));
+        given(materialRepository.findById(fileId)).willReturn(Optional.of(mat));
 
-    assertEquals("image/png", service.getContentType(fileId));
-  }
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                        () -> service.loadFileAsResource(fileId));
+        assertEquals("File not found", ex.getMessage());
+    }
 
-  @Test
-  void getContentType_returnsDefault_whenNotFound() {
-    UUID fileId = UUID.randomUUID();
-    given(materialRepository.findById(fileId)).willReturn(Optional.empty());
+    @Test void getContentType_returnsStoredType() {
+        UUID fileId = UUID.randomUUID();
+        StudyMaterial mat = new StudyMaterial();
+        mat.setContentType("image/png");
 
-    assertEquals("application/octet-stream", service.getContentType(fileId));
-  }
+        given(materialRepository.findById(fileId)).willReturn(Optional.of(mat));
 
-  @Test
-  void getOriginalName_returnsName() {
-    UUID fileId = UUID.randomUUID();
-    StudyMaterial mat = new StudyMaterial();
-    mat.setFileName("my_photo.jpg");
+        assertEquals("image/png", service.getContentType(fileId));
+    }
 
-    given(materialRepository.findById(fileId)).willReturn(Optional.of(mat));
+    @Test void getContentType_returnsDefault_whenNotFound() {
+        UUID fileId = UUID.randomUUID();
+        given(materialRepository.findById(fileId)).willReturn(Optional.empty());
 
-    assertEquals("my_photo.jpg", service.getOriginalName(fileId));
-  }
+        assertEquals("application/octet-stream", service.getContentType(fileId));
+    }
 
-  @Test
-  void getOriginalName_returnsDefault() {
-    UUID fileId = UUID.randomUUID();
-    given(materialRepository.findById(fileId)).willReturn(Optional.empty());
+    @Test void getOriginalName_returnsName() {
+        UUID fileId = UUID.randomUUID();
+        StudyMaterial mat = new StudyMaterial();
+        mat.setFileName("my_photo.jpg");
 
-    assertEquals("file", service.getOriginalName(fileId));
-  }
+        given(materialRepository.findById(fileId)).willReturn(Optional.of(mat));
 
-  @Test
-  void createFullTest_handlesFileWithoutExtension() throws IOException {
-    UUID owner = UUID.randomUUID();
-    TestCreateRequest req = new TestCreateRequest();
-    req.setTitle("No Ext Test");
+        assertEquals("my_photo.jpg", service.getOriginalName(fileId));
+    }
 
-    MockMultipartFile file =
-        new MockMultipartFile("files", "README", "text/plain", "abc".getBytes());
+    @Test void getOriginalName_returnsDefault() {
+        UUID fileId = UUID.randomUUID();
+        given(materialRepository.findById(fileId)).willReturn(Optional.empty());
 
-    given(studyRepository.save(any(Study.class)))
-        .willAnswer(
-            inv -> {
-              Study s = inv.getArgument(0);
-              s.setStudyId(UUID.randomUUID());
-              return s;
-            });
+        assertEquals("file", service.getOriginalName(fileId));
+    }
 
-    service.createFullTest(req, new MultipartFile[] {file}, owner);
+    @Test void createFullTest_handlesFileWithoutExtension() throws IOException {
+        UUID owner = UUID.randomUUID();
+        TestCreateRequest req = new TestCreateRequest();
+        req.setTitle("No Ext Test");
 
-    ArgumentCaptor<StudyMaterial> captor = ArgumentCaptor.forClass(StudyMaterial.class);
-    verify(materialRepository).save(captor.capture());
+        MockMultipartFile file = new MockMultipartFile("files", "README", "text/plain",
+                        "abc".getBytes());
 
-    String storedPath = captor.getValue().getFilePath();
-    assertFalse(
-        storedPath.contains("."),
-        "If the original file does not contain dot in its filename, saved file's name shouldn't"
-            + " contain it too");
-  }
+        given(studyRepository.save(any(Study.class))).willAnswer(inv -> {
+            Study s = inv.getArgument(0);
+            s.setStudyId(UUID.randomUUID());
+            return s;
+        });
 
-  @Test
-  void updateTestSettings_ignoresNullFields_andPreservesOldValues() throws JsonProcessingException {
-    UUID testId = UUID.randomUUID();
-    UUID owner = UUID.randomUUID();
-    Study study = new Study();
-    study.setResearcherId(owner);
+        service.createFullTest(req, new MultipartFile[]{file}, owner);
 
-    TestCreateRequest oldSettings = new TestCreateRequest();
-    oldSettings.setTitle("Old Title");
-    oldSettings.setDispGazeTracking(true);
-    study.setSettings(objectMapper.writeValueAsString(oldSettings));
-    study.setTitle("Old Title");
+        ArgumentCaptor<StudyMaterial> captor = ArgumentCaptor.forClass(StudyMaterial.class);
+        verify(materialRepository).save(captor.capture());
 
-    given(studyRepository.findById(testId)).willReturn(Optional.of(study));
+        String storedPath = captor.getValue().getFilePath();
+        assertFalse(storedPath.contains("."),
+                        "If the original file does not contain dot in its filename, saved file's name shouldn't"
+                                        + " contain it too");
+    }
 
-    TestCreateRequest newSettings = new TestCreateRequest();
+    @Test void updateTestSettings_ignoresNullFields_andPreservesOldValues()
+                    throws JsonProcessingException {
+        UUID testId = UUID.randomUUID();
+        UUID owner = UUID.randomUUID();
+        Study study = new Study();
+        study.setResearcherId(owner);
 
-    service.updateTestSettingsForResearcher(testId, newSettings, owner);
+        TestCreateRequest oldSettings = new TestCreateRequest();
+        oldSettings.setTitle("Old Title");
+        oldSettings.setDispGazeTracking(true);
+        study.setSettings(objectMapper.writeValueAsString(oldSettings));
+        study.setTitle("Old Title");
 
-    ArgumentCaptor<Study> captor = ArgumentCaptor.forClass(Study.class);
-    verify(studyRepository).save(captor.capture());
+        given(studyRepository.findById(testId)).willReturn(Optional.of(study));
 
-    Study saved = captor.getValue();
-    assertEquals("Old Title", saved.getTitle());
+        TestCreateRequest newSettings = new TestCreateRequest();
 
-    TestCreateRequest merged = objectMapper.readValue(saved.getSettings(), TestCreateRequest.class);
-    assertEquals("Old Title", merged.getTitle());
-    assertTrue(merged.getDispGazeTracking());
-  }
+        service.updateTestSettingsForResearcher(testId, newSettings, owner);
 
-  @Test
-  void updateTestSettings_handlesNullSettingsInDb() {
-    UUID testId = UUID.randomUUID();
-    UUID owner = UUID.randomUUID();
-    Study study = new Study();
-    study.setResearcherId(owner);
-    study.setSettings(null);
+        ArgumentCaptor<Study> captor = ArgumentCaptor.forClass(Study.class);
+        verify(studyRepository).save(captor.capture());
 
-    given(studyRepository.findById(testId)).willReturn(Optional.of(study));
+        Study saved = captor.getValue();
+        assertEquals("Old Title", saved.getTitle());
 
-    TestCreateRequest newSettings = new TestCreateRequest();
-    newSettings.setTitle("New");
+        TestCreateRequest merged = objectMapper.readValue(saved.getSettings(),
+                        TestCreateRequest.class);
+        assertEquals("Old Title", merged.getTitle());
+        assertTrue(merged.getDispGazeTracking());
+    }
 
-    assertDoesNotThrow(() -> service.updateTestSettingsForResearcher(testId, newSettings, owner));
+    @Test void updateTestSettings_handlesNullSettingsInDb() {
+        UUID testId = UUID.randomUUID();
+        UUID owner = UUID.randomUUID();
+        Study study = new Study();
+        study.setResearcherId(owner);
+        study.setSettings(null);
 
-    verify(studyRepository).save(study);
-    assertEquals("New", study.getTitle());
-  }
+        given(studyRepository.findById(testId)).willReturn(Optional.of(study));
 
-  @Test
-  void createFullTest_handlesFileSaveError_throwsRuntimeException() throws IOException {
-    UUID owner = UUID.randomUUID();
-    TestCreateRequest req = new TestCreateRequest();
-    req.setTitle("Error Test");
+        TestCreateRequest newSettings = new TestCreateRequest();
+        newSettings.setTitle("New");
 
-    MultipartFile badFile = mock(MultipartFile.class);
-    when(badFile.getOriginalFilename()).thenReturn("virus.exe");
-    when(badFile.getInputStream()).thenThrow(new IOException("Disk Failure"));
+        assertDoesNotThrow(
+                        () -> service.updateTestSettingsForResearcher(testId, newSettings, owner));
 
-    given(studyRepository.save(any(Study.class))).willReturn(new Study());
+        verify(studyRepository).save(study);
+        assertEquals("New", study.getTitle());
+    }
 
-    RuntimeException ex =
-        assertThrows(
-            RuntimeException.class,
-            () -> service.createFullTest(req, new MultipartFile[] {badFile}, owner));
+    @Test void createFullTest_handlesFileSaveError_throwsRuntimeException() throws IOException {
+        UUID owner = UUID.randomUUID();
+        TestCreateRequest req = new TestCreateRequest();
+        req.setTitle("Error Test");
 
-    assertTrue(ex.getMessage().contains("Couldn't save file"));
-  }
+        MultipartFile badFile = mock(MultipartFile.class);
+        when(badFile.getOriginalFilename()).thenReturn("virus.exe");
+        when(badFile.getInputStream()).thenThrow(new IOException("Disk Failure"));
 
-  @Test
-  void deleteTestForResearcher_handlesFileDeleteError_logsButContinues() throws IOException {
-    UUID testId = UUID.randomUUID();
-    UUID owner = UUID.randomUUID();
-    Study study = new Study();
-    study.setResearcherId(owner);
+        given(studyRepository.save(any(Study.class))).willReturn(new Study());
 
-    String dirName = "im_a_directory";
-    Path dirPath = tempDir.resolve(dirName);
-    Files.createDirectory(dirPath);
-    Files.createFile(dirPath.resolve("lock.txt"));
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                        () -> service.createFullTest(req, new MultipartFile[]{badFile}, owner));
 
-    StudyMaterial m1 = new StudyMaterial();
-    m1.setFilePath(dirName);
-    m1.setStudy(study);
+        assertTrue(ex.getMessage().contains("Couldn't save file"));
+    }
 
-    given(studyRepository.findById(testId)).willReturn(Optional.of(study));
-    given(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study)).willReturn(List.of(m1));
+    @Test void deleteTestForResearcher_handlesFileDeleteError_logsButContinues()
+                    throws IOException {
+        UUID testId = UUID.randomUUID();
+        UUID owner = UUID.randomUUID();
+        Study study = new Study();
+        study.setResearcherId(owner);
 
-    assertDoesNotThrow(() -> service.deleteTestForResearcher(testId, owner));
+        String dirName = "im_a_directory";
+        Path dirPath = tempDir.resolve(dirName);
+        Files.createDirectory(dirPath);
+        Files.createFile(dirPath.resolve("lock.txt"));
 
-    verify(studyRepository).delete(study);
-  }
+        StudyMaterial m1 = new StudyMaterial();
+        m1.setFilePath(dirName);
+        m1.setStudy(study);
 
-  @Test
-  void updateTestSettings_handlesBlankSettingsString() {
-    UUID testId = UUID.randomUUID();
-    UUID owner = UUID.randomUUID();
-    Study study = new Study();
-    study.setResearcherId(owner);
-    study.setSettings("");
+        given(studyRepository.findById(testId)).willReturn(Optional.of(study));
+        given(materialRepository.findAllByStudyOrderByDisplayOrderAsc(study))
+                        .willReturn(List.of(m1));
 
-    given(studyRepository.findById(testId)).willReturn(Optional.of(study));
+        assertDoesNotThrow(() -> service.deleteTestForResearcher(testId, owner));
 
-    TestCreateRequest newSettings = new TestCreateRequest();
-    newSettings.setTitle("Updated");
+        verify(studyRepository).delete(study);
+    }
 
-    service.updateTestSettingsForResearcher(testId, newSettings, owner);
+    @Test void updateTestSettings_handlesBlankSettingsString() {
+        UUID testId = UUID.randomUUID();
+        UUID owner = UUID.randomUUID();
+        Study study = new Study();
+        study.setResearcherId(owner);
+        study.setSettings("");
 
-    verify(studyRepository).save(study);
-    assertEquals("Updated", study.getTitle());
-  }
+        given(studyRepository.findById(testId)).willReturn(Optional.of(study));
 
-  @Test
-  void createFullTest_handlesFileStartingWithDot() throws IOException {
-    UUID owner = UUID.randomUUID();
-    TestCreateRequest req = new TestCreateRequest();
-    req.setTitle("Dotfile Test");
+        TestCreateRequest newSettings = new TestCreateRequest();
+        newSettings.setTitle("Updated");
 
-    MockMultipartFile file =
-        new MockMultipartFile("files", ".hidden", "text/plain", "abc".getBytes());
+        service.updateTestSettingsForResearcher(testId, newSettings, owner);
 
-    given(studyRepository.save(any(Study.class)))
-        .willAnswer(
-            inv -> {
-              Study s = inv.getArgument(0);
-              s.setStudyId(UUID.randomUUID());
-              return s;
-            });
+        verify(studyRepository).save(study);
+        assertEquals("Updated", study.getTitle());
+    }
 
-    service.createFullTest(req, new MultipartFile[] {file}, owner);
+    @Test void createFullTest_handlesFileStartingWithDot() throws IOException {
+        UUID owner = UUID.randomUUID();
+        TestCreateRequest req = new TestCreateRequest();
+        req.setTitle("Dotfile Test");
 
-    ArgumentCaptor<StudyMaterial> captor = ArgumentCaptor.forClass(StudyMaterial.class);
-    verify(materialRepository).save(captor.capture());
+        MockMultipartFile file = new MockMultipartFile("files", ".hidden", "text/plain",
+                        "abc".getBytes());
 
-    String storedPath = captor.getValue().getFilePath();
-    assertFalse(
-        storedPath.contains("."),
-        "File .hidden shouldn't contain dot in it's filename after saving on disk");
-  }
+        given(studyRepository.save(any(Study.class))).willAnswer(inv -> {
+            Study s = inv.getArgument(0);
+            s.setStudyId(UUID.randomUUID());
+            return s;
+        });
 
-  @Test
-  void createFullTest_handlesEmptyFileList() {
-    UUID owner = UUID.randomUUID();
-    TestCreateRequest req = new TestCreateRequest();
-    req.setTitle("No Files Test");
+        service.createFullTest(req, new MultipartFile[]{file}, owner);
 
-    given(studyRepository.save(any(Study.class))).willReturn(new Study());
+        ArgumentCaptor<StudyMaterial> captor = ArgumentCaptor.forClass(StudyMaterial.class);
+        verify(materialRepository).save(captor.capture());
 
-    service.createFullTest(req, new MultipartFile[] {}, owner);
+        String storedPath = captor.getValue().getFilePath();
+        assertFalse(storedPath.contains("."),
+                        "File .hidden shouldn't contain dot in it's filename after saving on disk");
+    }
 
-    verify(studyRepository).save(any(Study.class));
-    verify(materialRepository, never()).save(any(StudyMaterial.class));
-  }
+    @Test void createFullTest_handlesEmptyFileList() {
+        UUID owner = UUID.randomUUID();
+        TestCreateRequest req = new TestCreateRequest();
+        req.setTitle("No Files Test");
+
+        given(studyRepository.save(any(Study.class))).willReturn(new Study());
+
+        service.createFullTest(req, new MultipartFile[]{}, owner);
+
+        verify(studyRepository).save(any(Study.class));
+        verify(materialRepository, never()).save(any(StudyMaterial.class));
+    }
 }
