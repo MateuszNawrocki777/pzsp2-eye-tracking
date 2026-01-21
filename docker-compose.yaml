@@ -24,7 +24,7 @@ services:
             APP_ADMIN_EMAIL: "${APP_ADMIN_EMAIL:-admin@eye-tracking.local}"
             APP_ADMIN_PASSWORD: "${APP_ADMIN_PASSWORD:-ChangeMeAdmin123!}"
             JWT_SECRET: "${JWT_SECRET:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}"
-            # FRONTEND_URL: http://frontend:5173
+            FRONTEND_URL: "${FRONTEND_URL:-http://frontend:5173}"
 
         depends_on:
             - postgres
