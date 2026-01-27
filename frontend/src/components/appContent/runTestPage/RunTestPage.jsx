@@ -146,6 +146,8 @@ export default function RunTestPage({ source }) {
         const testSubmitionNameInputRef = useRef(null);
         const navigate = useNavigate();
 
+        const [alreadySubmitted, setAlreadySubmitted] = useState(false);
+
         return (
             <div className="run-test-submit-results-tile">
                 <div>
@@ -153,17 +155,24 @@ export default function RunTestPage({ source }) {
                     <p>Submit your test results to the server.</p>
                 </div>
                 <div className="run-test-submit-results-form">
+                    {alreadySubmitted ? (
+                        <p className="run-test-submit-results-submitted-message">
+                            Results submitted! Thank you.
+                        </p>
+                    ) : (
                     <input
                         type="text"
                         placeholder="Enter test submission name"
                         ref={testSubmitionNameInputRef}
                     />
+                    )}
                     <LoadingButton
-                        className="run-test-submit-results-button"
+                        className={`run-test-submit-results-button${alreadySubmitted ? " disabled" : ""}`}
                         onClick={() => {
+                            if (alreadySubmitted) return;
                             const submissionName = testSubmitionNameInputRef.current.value;
                             submitStudyCall(testId, submissionName, results);
-                            navigate('/');
+                            setAlreadySubmitted(true);
                         }}
                     >
                         Submit

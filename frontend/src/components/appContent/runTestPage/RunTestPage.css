@@ -75,3 +75,17 @@
     background-color: #5F85DB;
     margin-top: 5px;
 }
+
+.run-test-submit-results-button.disabled {
+    background-color: #353941;
+    margin-top: 5px;
+}
+
+.run-test-submit-results-button.disabled:hover {
+    border: 1px solid transparent;
+    cursor: default;
+}
+
+.run-test-submit-results-submitted-message {
+    margin: 0 0 10px 0;
+}

@@ -61,6 +61,7 @@
       let results = [];
       let index = 0;
       let calibrationFinished = false;
+      let indices = [];
 
       let secondsPerImage = 5;
       let enableDisplayGazeTracking = true;
@@ -82,6 +83,19 @@
         randomizeImageOrder = data.randomizeImageOrder;
         index = 0;
 
+        indices = Array.from(Array(images.length).keys());
+        let randomIndices = [];
+        if (randomizeImageOrder) {
+          while (indices.length > 0) {
+            let randIndex = Math.floor(Math.random() * indices.length);
+            randomIndices.push(indices[randIndex]);
+            indices.splice(randIndex, 1);
+          }
+        } else {
+          randomIndices = indices;
+        }
+        indices = randomIndices;
+
         if (images.length > 0 && calibrationFinished) startSlideshow();
       });
 
@@ -97,7 +111,7 @@
           finishSlideshow();
           return;
         }
-        document.getElementById("displayImage").src = images[index];
+        document.getElementById("displayImage").src = images[indices[index]];
 
         setTimeout(() => {
           results.push(gazePoints);
@@ -108,6 +122,11 @@
       }
 
       function finishSlideshow() {
+        let orderedResults = [];
+        for (let i = 0; i < images.length; i++) {
+          orderedResults.push(results[indices.indexOf(i)]);
+        }
+        results = orderedResults;
         if (window.opener) {
           window.opener.postMessage(
             { type: "postResults", results },

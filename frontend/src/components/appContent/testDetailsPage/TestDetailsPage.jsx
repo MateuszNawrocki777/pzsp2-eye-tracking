@@ -5,6 +5,8 @@ import deleteTestCall from "../../../services/api/deleteTestCall";
 import getTestCall from "../../../services/api/getTestCall";
 import generateLinkCall from "../../../services/api/generateLinkCall";
 import getMainHeatmapCall from "../../../services/api/getMainHeatmapCall";
+import getStudiesCall from "../../../services/api/getStudiesCall";
+import getStudyHeatmapCall from "../../../services/api/getStudyHeatmapCall";
 
 import TestResultImages from "../../testResultImages/TestResultImages";
 import PopupMessage from "../../popupMessage/PopupMessage";
@@ -35,6 +37,13 @@ export default function TestDetailsPage() {
 
   const [mainHeatmap, setMainHeatmap] = useState(null);
 
+  const [isLoadingStudies, setIsLoadingStudies] = useState(false);
+  const [studiesError, setStudiesError] = useState(null);
+  const [studies, setStudies] = useState([]);
+
+  const [selectedStudyId, setSelectedStudyId] = useState(null);
+  const [secondaryHeatmap, setSecondaryHeatmap] = useState(null);
+
   useEffect(() => {
     async function loadTest() {
       try {
@@ -61,7 +70,6 @@ export default function TestDetailsPage() {
     async function loadMainHeatmap() {
       try {
         const response = await getMainHeatmapCall(testId);
-        console.log("Main heatmap data:", response.data);
         setMainHeatmap(response.data.heatmaps);
       } catch (e) {
         console.error("Failed to load main heatmap", e);
@@ -70,6 +78,41 @@ export default function TestDetailsPage() {
 
     loadMainHeatmap();
   }, [testId]);
+
+  useEffect(() => {
+    async function loadStudies() {
+      setIsLoadingStudies(true);
+      setStudiesError(null);
+      try {
+        const response = await getStudiesCall(testId);
+        setStudies(response.data);
+      } catch (e) {
+        setStudiesError("Failed to load studies");
+      } finally {
+        setIsLoadingStudies(false);
+      }
+    }
+
+    loadStudies();
+  }, [testId]);
+
+  useEffect(() => {
+    if (selectedStudyId === null) {
+      setSecondaryHeatmap(null);
+      return;
+    }
+
+    async function loadSecondaryHeatmap() {
+      try {
+        const response = await getStudyHeatmapCall(selectedStudyId);
+        setSecondaryHeatmap(response.data.heatmaps);
+      } catch (e) {
+        console.error("Failed to load secondary heatmap", e);
+      }
+    }
+
+    loadSecondaryHeatmap();
+  }, [selectedStudyId]);
 
   return (
     <div className="test-details-container">
@@ -84,6 +127,7 @@ export default function TestDetailsPage() {
             randomizeImageOrder={randomizeImageOrder}
             enableDisplayGazeTracking={enableDisplayGazeTracking}
             enableDisplayTimeLeft={enableDisplayTimeLeft} />
+          <StudiesSection />
           <RunTest />
         </div>
         <button
@@ -97,7 +141,9 @@ export default function TestDetailsPage() {
       {popupImageIndex !== null && (
         <HeatmapPopup
           image={images[popupImageIndex]}
-          points={mainHeatmap[popupImageIndex].map(({x, y, val}) => [x/384, y/216, val])}  // TODO: replace 384 and 216 with 1
+          points={selectedStudyId ?
+                    secondaryHeatmap[popupImageIndex].map(({x, y, val}) => [x/384, y/216, val]) :
+                    mainHeatmap[popupImageIndex].map(({x, y, val}) => [x/384, y/216, val])}  // TODO: replace 384 and 216 with 1
           onClose={() => setPopupImageIndex(null)}
         />
       )}
@@ -142,7 +188,7 @@ export default function TestDetailsPage() {
           />
           <label htmlFor="imageTime"> seconds per image </label>
         </div>
-        <div className="test-details-control-checkbox" style={{ display: "none"}}>
+        <div className="test-details-control-checkbox">
           <input
             type="checkbox"
             id="randomizeImages"
@@ -241,5 +287,56 @@ export default function TestDetailsPage() {
             console.error("Error generating link:", error);
         });
     }
+  }
+
+  function StudiesSection() {
+
+    let content;
+    if (isLoadingStudies) {
+      content = <p className="test-details-studies-message">Loading studies...</p>;
+    } else if (studiesError) {
+      content = <p className="test-details-studies-message">{studiesError}</p>;
+    } else if (studies.length === 0) {
+      content = <p className="test-details-studies-message">No studies found.</p>;
+    } else {
+      content = (
+      <div className="test-details-studies-list">
+        {studies.map((study) => (
+          <StudyItem key={study.session_id} study={study} />
+        ))}
+      </div>
+
+      );
+    }
+
+    return (
+      <div className="test-details-control-panel studies-section">
+        <div>
+          <h2>Test Submissions</h2>
+          <p className="test-details-study-p">Select picture to view the heatmap.<br />Select study to view submission specific heatmaps.</p>
+        </div>
+        {content}
+        <button className="test-details-study-section-reset-button"
+          onClick={() => setSelectedStudyId(null)}>
+            Reset
+        </button>
+      </div>
+    );
+  }
+
+  function StudyItem({study}) {
+    const date = new Date(study.completed_at);
+    return (
+      <div className={`test-details-study-item${selectedStudyId === study.session_id ? " selected" : ""}`}
+           onClick={() => {
+              if (selectedStudyId !== study.session_id)
+                setSelectedStudyId(study.session_id)
+              else
+                setSelectedStudyId(null);
+           }}>
+        <h3>{study.name}</h3>
+        <p>{date.toLocaleString("pl-PL")}</p>
+      </div>
+    );
   }
 }
